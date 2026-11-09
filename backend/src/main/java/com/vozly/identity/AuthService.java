@@ -192,8 +192,7 @@ public class AuthService {
         if (rows.isEmpty()) throw new BadCredentialsException("Sessão inválida.");
         RefreshSession session = rows.getFirst();
         if (session.revokedAt() != null) {
-            jdbc.update("UPDATE vozly.refresh_token_sessions SET revoked_at = COALESCE(revoked_at, CURRENT_TIMESTAMP) WHERE family_id = ?",
-                    session.familyId());
+            revocationService.revokeFamily(session.familyId());
             throw new BadCredentialsException("Sessão inválida.");
         }
         if (session.expiresAt().isBefore(Instant.now())) {
