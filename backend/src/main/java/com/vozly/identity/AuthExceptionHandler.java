@@ -3,6 +3,7 @@ package com.vozly.identity;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,6 +28,13 @@ public class AuthExceptionHandler {
     ResponseEntity<Map<String, String>> accountLinkRequired() {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("code", "ACCOUNT_LINK_REQUIRED", "message", "Entre pela forma original de acesso para vincular a conta Microsoft."));
+    }
+
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ResponseEntity<Map<String, String>> dataConflict() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("code", "RESOURCE_CONFLICT", "message", "Não foi possível concluir a operação por conflito de dados."));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
