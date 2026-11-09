@@ -67,7 +67,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    SecurityFilterChain apiSecurity(HttpSecurity http, MicrosoftLoginSuccessHandler microsoftLoginSuccessHandler, ActiveMembershipFilter activeMembershipFilter) throws Exception {
+    SecurityFilterChain apiSecurity(HttpSecurity http, MicrosoftLoginSuccessHandler microsoftLoginSuccessHandler, MicrosoftLoginFailureHandler microsoftLoginFailureHandler, ActiveMembershipFilter activeMembershipFilter) throws Exception {
         return http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -81,7 +81,7 @@ public class SecurityConfiguration {
                                 "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated())
-                .oauth2Login(oauth2 -> oauth2.successHandler(microsoftLoginSuccessHandler))
+                .oauth2Login(oauth2 -> oauth2.successHandler(microsoftLoginSuccessHandler).failureHandler(microsoftLoginFailureHandler))
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .addFilterAfter(activeMembershipFilter, BearerTokenAuthenticationFilter.class)
                 .build();
