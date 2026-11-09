@@ -1,11 +1,12 @@
 import { Component, EventEmitter, HostListener, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../ui/icon/icon.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, RouterLink, IconComponent],
   template: `
     <header class="header" [class.scrolled]="isScrolled" [class.menu-open]="mobileMenuOpen">
       <div class="container header-container">
@@ -34,9 +35,9 @@ import { IconComponent } from '../../ui/icon/icon.component';
 
         <!-- Ações à Direita -->
         <div class="header-actions">
-          <button class="btn btn-ghost btn-sm btn-login" (click)="openAuthDemo()">
+          <a routerLink="/login" class="btn btn-ghost btn-sm btn-login">
             Entrar
-          </button>
+          </a>
           <button class="btn btn-primary btn-sm btn-cta" (click)="openStartDemo()">
             Começar agora
           </button>
@@ -96,9 +97,9 @@ import { IconComponent } from '../../ui/icon/icon.component';
           </ul>
 
           <div class="mobile-drawer-actions">
-            <button class="btn btn-secondary w-full" (click)="openAuthDemo(); closeMobileMenu()">
-              Entrar (Demo)
-            </button>
+            <a routerLink="/login" (click)="closeMobileMenu()" class="btn btn-secondary w-full">
+              Entrar
+            </a>
             <button class="btn btn-primary w-full" (click)="openStartDemo(); closeMobileMenu()">
               Começar agora
             </button>
