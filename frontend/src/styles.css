@@ -440,9 +440,28 @@ h1, h2, h3, h4, h5, h6 {
   animation: pulseGlow 4s ease-in-out infinite;
 }
 
-/* Respeito a prefers-reduced-motion */
+/* Keyframes de rotação da página de login */
+@keyframes la-giro {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes la-giro-reverso {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+/* Respeito a prefers-reduced-motion (preservando anéis de marca .la-anel) */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *:not(.la-anel), *:not(.la-anel)::before, *:not(.la-anel)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

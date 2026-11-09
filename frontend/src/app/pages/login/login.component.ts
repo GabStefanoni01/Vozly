@@ -9,6 +9,9 @@ import { Router, RouterLink } from '@angular/router';
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <main class="la-tela">
+      <!-- Fundo Atmosférico Minimalista com Brilho Radial Violeta Oficial Vozly (Sem banner) -->
+      <div class="la-fundo" aria-hidden="true"></div>
+
       <!-- Botão Voltar para o Início no Canto Superior Esquerdo -->
       <a routerLink="/" class="la-voltar-inicio" aria-label="Voltar para a página inicial">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -17,23 +20,6 @@ import { Router, RouterLink } from '@angular/router';
         </svg>
         <span>Início</span>
       </a>
-
-      <!-- Fundo Atmosférico com Brilho Radial -->
-      <div class="la-fundo" aria-hidden="true"></div>
-
-      <!-- Elemento de Fundo das Bordas: Fita de Seda Roxa (2ª Imagem da Referência) -->
-      <div class="la-smoke-backdrop" aria-hidden="true">
-        <img
-          src="brand/login-smoke-bg.webp"
-          alt=""
-          class="la-smoke-img la-smoke-left"
-        />
-        <img
-          src="brand/login-smoke-bg.webp"
-          alt=""
-          class="la-smoke-img la-smoke-right"
-        />
-      </div>
 
       <div class="la-coluna">
         <!-- Marca Oficial Vozly -->
@@ -143,9 +129,9 @@ import { Router, RouterLink } from '@angular/router';
       --la-cor-2: #8B3DFF;            /* violeta secundário para anel 2 e botão */
       --la-cor-3: #6D00FF;            /* roxo profundo para anel 3 */
       --la-fundo: #050505;
-      --la-brilho-fundo: rgba(109, 0, 255, 0.28);
-      --la-cartao-1: rgba(21, 21, 27, 0.94);
-      --la-cartao-2: rgba(11, 11, 15, 0.98);
+      --la-brilho-fundo: rgba(109, 0, 255, 0.24);
+      --la-cartao-1: rgba(15, 12, 24, 0.94);
+      --la-cartao-2: rgba(8, 6, 14, 0.98);
       --la-texto: #FFFFFF;
       --la-texto-suave: #A1A1AA;
       --la-texto-botao: #FFFFFF;
@@ -178,7 +164,7 @@ import { Router, RouterLink } from '@angular/router';
       color: var(--la-texto-suave);
       text-decoration: none;
       padding: 8px 14px;
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 999px;
       backdrop-filter: blur(12px);
@@ -193,51 +179,13 @@ import { Router, RouterLink } from '@angular/router';
       transform: translateX(-2px);
     }
 
-    /* Fundo com Brilho Radial */
+    /* Fundo com Brilho Radial Puro & Minimalista */
     .la-fundo {
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background: radial-gradient(ellipse 65% 50% at 50% 50%, var(--la-brilho-fundo), transparent 70%), var(--la-fundo);
+      background: radial-gradient(ellipse 60% 45% at 50% 50%, var(--la-brilho-fundo), transparent 70%), var(--la-fundo);
       z-index: 0;
-    }
-
-    /* Elemento de Fundo das Bordas: Seda/Fumaça Roxa (2ª Imagem da Referência) */
-    .la-smoke-backdrop {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 0;
-      opacity: 0.75;
-      mix-blend-mode: screen;
-    }
-
-    .la-smoke-img {
-      height: 100%;
-      max-height: 980px;
-      width: auto;
-      object-fit: cover;
-      pointer-events: none;
-      user-select: none;
-      mask-image: radial-gradient(ellipse 70% 65% at 50% 50%, #000 40%, transparent 100%);
-      -webkit-mask-image: radial-gradient(ellipse 70% 65% at 50% 50%, #000 40%, transparent 100%);
-    }
-
-    .la-smoke-left {
-      transform: translateX(-15%) scaleX(-1);
-    }
-
-    .la-smoke-right {
-      transform: translateX(15%);
-    }
-
-    @media (max-width: 768px) {
-      .la-smoke-backdrop {
-        opacity: 0.45;
-      }
     }
 
     .la-coluna {
@@ -269,13 +217,15 @@ import { Router, RouterLink } from '@angular/router';
       color: var(--la-cor-1);
     }
 
-    /* Anéis Fluidos Orbitando o Cartão */
+    /* Cena e Anéis Orbitando o Cartão */
     .la-cena {
       position: relative;
       isolation: isolate;
     }
 
+    /* Anel Base: dimensões fiéis, rotação garantida por transform */
     .la-anel {
+      display: block;
       position: absolute;
       left: 50%;
       top: 50%;
@@ -285,65 +235,71 @@ import { Router, RouterLink } from '@angular/router';
       margin: calc((100% + 72px) / -2) 0 0 calc((100% + 72px) / -2);
       border: 2px solid var(--la-cor-1);
       color: var(--la-cor-1);
-      opacity: 0.55;
+      opacity: 0.6;
       pointer-events: none;
+      transform-origin: 50% 50%;
+      transform: rotate(0deg);
       will-change: transform;
       transition: opacity 0.4s ease, box-shadow 0.4s ease, border-width 0.4s ease;
-      animation: la-giro 18s linear infinite;
     }
 
     .la-anel.anel-1 {
       border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+      animation: la-giro 12s linear infinite;
     }
 
     .la-anel.anel-2 {
       border-radius: 41% 44% 56% 59% / 38% 62% 63% 37%;
       border-color: var(--la-cor-2);
       color: var(--la-cor-2);
-      animation-duration: 14s;
+      animation: la-giro 8s linear infinite;
     }
 
     .la-anel.anel-3 {
       border-radius: 41% 44% 56% 59% / 38% 62% 63% 37%;
       border-color: var(--la-cor-3);
       color: var(--la-cor-3);
-      animation-name: la-giro-reverso;
-      animation-duration: 24s;
+      animation: la-giro-reverso 14s linear infinite;
     }
 
-    /* Brilho Intenso dos Anéis ao Focar ou Passar o Mouse */
+    /* Brilho Intenso dos Anéis ao Focar ou Passar o Mouse no Cartão */
     .la-cena:hover .la-anel,
     .la-cena:focus-within .la-anel {
-      opacity: 0.95;
-      border-width: 2.5px;
-      box-shadow: 0 0 20px currentColor, inset 0 0 14px currentColor;
+      opacity: 1;
+      border-width: 3px;
+      box-shadow: 0 0 18px currentColor, inset 0 0 12px currentColor;
     }
 
     @keyframes la-giro {
-      to { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     @keyframes la-giro-reverso {
-      to { transform: rotate(-360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(-360deg);
+      }
     }
 
     @media (max-width: 640px) {
       .la-anel {
-        width: calc(100% + 28px);
-        margin: calc((100% + 28px) / -2) 0 0 calc((100% + 28px) / -2);
+        width: calc(100% + 32px);
+        margin: calc((100% + 32px) / -2) 0 0 calc((100% + 32px) / -2);
         border-width: 1.5px;
-        opacity: 0.45;
+        opacity: 0.5;
       }
       .la-cena:hover .la-anel,
       .la-cena:focus-within .la-anel {
         border-width: 2px;
         box-shadow: 0 0 12px currentColor;
       }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .la-anel { animation-duration: 45s; }
-      .la-anel.anel-3 { animation-duration: 60s; }
     }
 
     /* Cartão Escuro com Efeito de Luz Mouse Tracker */
@@ -354,9 +310,7 @@ import { Router, RouterLink } from '@angular/router';
       padding: 36px;
       background: linear-gradient(160deg, var(--la-cartao-1), var(--la-cartao-2));
       border: 1px solid rgba(168, 85, 247, 0.2);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.95), 0 0 35px rgba(109, 0, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.95), 0 0 30px rgba(109, 0, 255, 0.1), inset 0 1px 0 rgba(168, 85, 247, 0.12);
     }
 
     .la-cartao::before {
@@ -366,7 +320,7 @@ import { Router, RouterLink } from '@angular/router';
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.35s ease;
-      background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 30%), rgba(168, 85, 247, 0.15), transparent 60%);
+      background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 30%), rgba(168, 85, 247, 0.12), transparent 60%);
     }
 
     .la-cena:hover .la-cartao::before,
