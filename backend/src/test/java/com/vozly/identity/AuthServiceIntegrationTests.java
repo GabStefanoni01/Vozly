@@ -1,0 +1,127 @@
+package com.vozly.identity;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.test.context.ActiveProfiles;
+
+@SpringBootTest
+@ActiveProfiles("test")
+class AuthServiceIntegrationTests {
+    @Autowired AuthService authService;
+    @Autowired JdbcTemplate jdbc;
+
+    @BeforeEach
+    void prepareSchema() {
+        jdbc.execute("CREATE SCHEMA IF NOT EXISTS vozly");
+        jdbc.execute("DROP TABLE IF EXISTS vozly.refresh_token_sessions");
+        jdbc.execute("DROP TABLE IF EXISTS vozly.external_identities");
+        jdbc.execute("DROP TABLE IF EXISTS vozly.memberships");
+        jdbc.execute("DROP TABLE IF EXISTS vozly.tenants");
+        jdbc.execute("DROP TABLE IF EXISTS vozly.users");
+        jdbc.execute("""
+                CREATE TABLE vozly.users (
+                    id UUID PRIMARY KEY, name VARCHAR(120) NOT NULL,
+                    email_normalized VARCHAR(320) NOT NULL UNIQUE,
+                    password_hash VARCHAR(100), status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP)
+                """);
+        jdbc.execute("""
+                CREATE TABLE vozly.tenants (
+                    id UUID PRIMARY KEY, name VARCHAR(160) NOT NULL,
+                    slug VARCHAR(180) NOT NULL UNIQUE, status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP)
+                """);
+        jdbc.execute("""
+                CREATE TABLE vozly.memberships (
+                    id UUID PRIMARY KEY, tenant_id UUID NOT NULL REFERENCES vozly.tenants(id),
+                    user_id UUID NOT NULL REFERENCES vozly.users(id), role VARCHAR(20) NOT NULL,
+                    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT uq_memberships_tenant_user UNIQUE (tenant_id, user_id))
+                """);
+        jdbc.execute("""
+                CREATE TABLE vozly.external_identities (
+                    id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES vozly.users(id),
+                    provider VARCHAR(30) NOT NULL, issuer VARCHAR(500) NOT NULL,
+                    subject VARCHAR(255) NOT NULL, email_at_provider VARCHAR(320),
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT uq_external_identity_issuer_subject UNIQUE (issuer, subject),
+                    CONSTRAINT uq_external_identity_user_provider UNIQUE (user_id, provider))
+                """);
+        jdbc.execute("""
+                CREATE TABLE vozly.refresh_token_sessions (
+                    id UUID PRIMARY KEY, family_id UUID NOT NULL,
+                    user_id UUID NOT NULL REFERENCES vozly.users(id),
+                    token_hash CHAR(64) NOT NULL UNIQUE, expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    revoked_at TIMESTAMP WITH TIME ZONE, replaced_by UUID,
+                    user_agent VARCHAR(500), ip_address VARCHAR(64))
+                """);
+    }
+
+    @Test
+    void registrationCreatesOwnerWorkspaceAndLoginIssuesTokens() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel", "GABRIEL@EXAMPLE.COM", "a-very-strong-password",
+                "Vozly Workspace", "test-agent", "127.0.0.1");
+
+        assertThat(registered.accessToken()).isNotBlank();
+        assertThat(registered.refreshToken()).isNotBlank();
+        assertThat(registered.role()).isEqualTo("OWNER");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.users", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.tenants", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT role FROM vozly.memberships", String.class)).isEqualTo("OWNER");
+
+        AuthService.AuthResult login = authService.login(
+                "gabriel@example.com", "a-very-strong-password", "test-agent", "127.0.0.1");
+        assertThat(login.accessToken()).isNotBlank();
+        assertThat(login.userId()).isEqualTo(registered.userId());
+    }
+
+    @Test
+    void refreshRotatesTokenAndLogoutRevokesIt() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+
+        AuthService.AuthResult rotated = authService.refresh(
+                registered.refreshToken(), null, null);
+        assertThat(rotated.refreshToken()).isNotEqualTo(registered.refreshToken());
+
+        authService.logout(rotated.refreshToken());
+        assertThatThrownBy(() -> authService.refresh(rotated.refreshToken(), null, null))
+                .isInstanceOf(BadCredentialsException.class);
+    }
+
+    @Test
+    void reuseOfRotatedRefreshTokenRevokesItsTokenFamily() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+        AuthService.AuthResult rotated = authService.refresh(registered.refreshToken(), null, null);
+
+        assertThatThrownBy(() -> authService.refresh(registered.refreshToken(), null, null))
+                .isInstanceOf(BadCredentialsException.class);
+        assertThatThrownBy(() -> authService.refresh(rotated.refreshToken(), null, null))
+                .isInstanceOf(BadCredentialsException.class);
+    }
+
+    @Test
+    void invalidPasswordIsRejected() {
+        authService.register("Gabriel", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+
+        assertThatThrownBy(() -> authService.login(
+                "gabriel@example.com", "wrong-password", null, null))
+                .isInstanceOf(BadCredentialsException.class);
+    }
+}
