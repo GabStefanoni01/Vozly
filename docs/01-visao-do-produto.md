@@ -1,44 +1,58 @@
 # Visão do produto
 
-## O que é a Vozly
-A Vozly é uma plataforma SaaS de agentes de voz inteligentes para empresas. Cada empresa configura agentes que atendem chamadas telefônicas, entendem a necessidade do cliente, consultam fontes de informação e executam ações autorizadas.
+## O que é o Vozly
 
-**Posicionamento:** Plataforma de agentes de voz inteligentes para empresas.
+O Vozly é uma solução de agentes de voz inteligentes para automatizar atendimentos e operações empresariais por telefone. Seus agentes conversam naturalmente com clientes, consultam informações autorizadas e executam operações definidas pela empresa por meio de integrações controladas.
 
-**Promessa:** Automatizar atendimentos telefônicos com conversas naturais e ações integradas à operação, mantendo controle, rastreabilidade e possibilidade de atendimento humano.
+**Posicionamento:** Solução de agentes de voz inteligentes para automatizar atendimentos e operações empresariais.
+
+**Promessa:** transformar chamadas telefônicas em atendimentos resolutivos, com conversas naturais, acesso controlado às informações e execução rastreável de operações, mantendo a possibilidade de transferência para uma pessoa.
 
 ## Problema
-Chamadas repetitivas para consultar informações, preços, prazos, status, agendar serviços e registrar solicitações consomem tempo da equipe e podem ficar sem resposta fora do horário comercial. As informações também podem estar espalhadas por documentos, planilhas e sistemas.
 
-## Público e entrada no mercado
-A plataforma será horizontal: empresas de diferentes segmentos poderão configurar agentes. A entrada será gradual, começando por assistências técnicas de eletrodomésticos como segmento de validação. O primeiro nicho não limita a arquitetura nem o mercado futuro.
+Empresas recebem chamadas repetitivas para consultar informações, acompanhar solicitações e iniciar atendimentos. Essas interações consomem o tempo das equipes, podem ficar sem resposta fora do horário de funcionamento e dependem de informações que muitas vezes estão distribuídas entre pessoas, documentos e sistemas.
+
+## Mercado inicial e expansão
+
+O primeiro segmento de validação será o de assistências técnicas de eletrodomésticos, incluindo operações realizadas na loja e em domicílio. Esse contexto permite validar necessidades concretas, como responder dúvidas recorrentes, consultar ordens de serviço e registrar solicitações de atendimento.
+
+A escolha representa uma estratégia de entrada e validação. A evolução do Vozly poderá atender outros segmentos empresariais quando houver casos de uso, integrações e regras de negócio bem compreendidos.
 
 ## Usuários
-- Administrador da empresa: configura workspace, usuários, agentes, permissões e indicadores.
-- Operador/atendente: acompanha solicitações e assume chamadas transferidas.
-- Cliente que liga: interage por telefone com o agente.
-- Administrador Vozly: opera a plataforma e presta suporte com acesso controlado.
+
+- **Administrador da empresa:** configura agentes, usuários, permissões, informações e operações autorizadas.
+- **Operador/atendente:** acompanha atendimentos e assume conversas transferidas.
+- **Cliente que liga:** interage por telefone com o agente de voz.
+- **Administrador Vozly:** opera o serviço e presta suporte com acesso controlado.
 
 ## Princípios
+
+- Conversas naturais e objetivas, adequadas ao contexto da empresa.
 - Configuração acessível para pessoas não técnicas.
-- Controle explícito sobre ações permitidas.
-- Transparência sobre o uso de agentes automatizados.
-- Respostas operacionais baseadas em fontes consultadas.
-- Transferência humana quando necessário.
-- Histórico e rastreabilidade de cada atendimento.
+- Ações limitadas a operações explicitamente autorizadas.
+- Respostas operacionais fundamentadas em fontes confiáveis.
+- Transparência sobre o atendimento automatizado.
+- Transferência humana quando necessária.
+- Histórico, auditoria e rastreabilidade.
+- Proteção dos dados e isolamento entre empresas.
 
 ## Jornada principal
-1. Empresa cria conta e workspace.
-2. Configura agente por fluxo guiado.
-3. Define apresentação, tom e instruções.
-4. Adiciona conhecimento e habilita ferramentas.
-5. Configura horários e transferência.
-6. Conecta número telefônico.
-7. Testa e publica o agente.
-8. Acompanha chamadas, resultados e consumo.
+
+1. A empresa configura seu ambiente e usuários.
+2. Define o agente, sua identidade, instruções e regras.
+3. Cadastra informações aprovadas para consulta.
+4. Habilita operações que o agente pode solicitar.
+5. Configura horários, números e regras de transferência.
+6. Testa e publica uma versão do agente.
+7. O agente recebe chamadas e atende dentro das permissões publicadas.
+8. A empresa acompanha chamadas, resultados, transferências e consumo.
 
 ## Métricas
-Chamadas atendidas, resolvidas e transferidas; solicitações registradas; duração média; falhas por etapa; custo estimado por chamada/minuto; satisfação quando houver coleta válida. Uma transferência correta também pode representar sucesso.
 
-## Fora da visão inicial
-Substituir equipes humanas, suportar qualquer integração desde o lançamento, construtor visual complexo no MVP, confirmar agendamentos sem disponibilidade real, executar pagamentos sem controles específicos ou atender emergências.
+Chamadas atendidas, resolvidas e transferidas; solicitações registradas; consultas concluídas; duração média; falhas por etapa; custo estimado por chamada/minuto; satisfação quando houver coleta válida. Uma transferência correta também pode representar um resultado bem-sucedido.
+
+## Limites e princípios de segurança
+
+O agente não deve inventar informações, status, preços, prazos, disponibilidade ou confirmações. A IA interpreta a conversa e solicita operações; o backend valida identidade, tenant, permissões, dados e regras de negócio antes de executar qualquer ação.
+
+O Vozly não tem como objetivo substituir integralmente equipes humanas. O atendimento humano permanece parte do fluxo, especialmente em situações ambíguas, sensíveis, excepcionais ou não suportadas.
