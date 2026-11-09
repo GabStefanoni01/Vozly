@@ -116,6 +116,35 @@ class AuthServiceIntegrationTests {
     }
 
     @Test
+    void microsoftIdentityCreatesWorkspaceAndReusesStableIssuerSubjectLink() {
+        String tenant = "8f5d4a6e-19c2-4d4b-a021-0b2d5f71a111";
+        String issuer = "https://login.microsoftonline.com/" + tenant + "/v2.0";
+        AuthService.AuthResult first = authService.loginMicrosoft(
+                issuer, "microsoft-subject-123", "person@company.example", "Person",
+                "test-agent", "127.0.0.1");
+        AuthService.AuthResult second = authService.loginMicrosoft(
+                issuer, "microsoft-subject-123", "different-claim@company.example", "Person",
+                "test-agent", "127.0.0.1");
+
+        assertThat(first.userId()).isEqualTo(second.userId());
+        assertThat(first.role()).isEqualTo("OWNER");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.users", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.external_identities", Integer.class)).isEqualTo(1);
+    }
+
+    @Test
+    void microsoftDoesNotSilentlyLinkToExistingLocalEmail() {
+        authService.register("Person", "person@company.example", "a-very-strong-password",
+                "Company", null, null);
+
+        assertThatThrownBy(() -> authService.loginMicrosoft(
+                "https://login.microsoftonline.com/8f5d4a6e-19c2-4d4b-a021-0b2d5f71a111/v2.0",
+                "microsoft-subject-456", "person@company.example", "Person", null, null))
+                .isInstanceOf(AuthService.AccountLinkRequiredException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.users", Integer.class)).isEqualTo(1);
+    }
+
+    @Test
     void invalidPasswordIsRejected() {
         authService.register("Gabriel", "gabriel@example.com", "a-very-strong-password",
                 "Vozly Workspace", null, null);
