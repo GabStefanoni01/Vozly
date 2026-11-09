@@ -1,44 +1,93 @@
 # Visão do produto
 
-## O que é a Vozly
-A Vozly é uma plataforma SaaS de agentes de voz inteligentes para empresas. Cada empresa configura agentes que atendem chamadas telefônicas, entendem a necessidade do cliente, consultam fontes de informação e executam ações autorizadas.
+## O que é o Vozly
 
-**Posicionamento:** Plataforma de agentes de voz inteligentes para empresas.
+O Vozly é uma solução de agentes de voz inteligentes para automatizar atendimentos e operações empresariais por telefone. Seus agentes conversam naturalmente com clientes, consultam informações autorizadas e executam operações definidas pela empresa por meio de integrações controladas.
 
-**Promessa:** Automatizar atendimentos telefônicos com conversas naturais e ações integradas à operação, mantendo controle, rastreabilidade e possibilidade de atendimento humano.
+**Posicionamento:** Solução de agentes de voz inteligentes para automatizar atendimentos e operações empresariais.
+
+**Promessa:** permitir que empresas configurem e operem seus próprios agentes de voz, transformando chamadas telefônicas em atendimentos resolutivos, com acesso controlado às informações e execução rastreável de operações.
 
 ## Problema
-Chamadas repetitivas para consultar informações, preços, prazos, status, agendar serviços e registrar solicitações consomem tempo da equipe e podem ficar sem resposta fora do horário comercial. As informações também podem estar espalhadas por documentos, planilhas e sistemas.
 
-## Público e entrada no mercado
-A plataforma será horizontal: empresas de diferentes segmentos poderão configurar agentes. A entrada será gradual, começando por assistências técnicas de eletrodomésticos como segmento de validação. O primeiro nicho não limita a arquitetura nem o mercado futuro.
+Empresas recebem chamadas repetitivas para consultar informações, acompanhar solicitações e iniciar processos. Essas interações consomem o tempo das equipes, podem ficar sem resposta fora do horário de funcionamento e dependem de informações distribuídas entre pessoas, documentos e sistemas. A implantação de automação também pode exigir configuração técnica e dependência de fornecedores, tornando difícil para a própria empresa adaptar o atendimento.
+
+## Proposta de valor
+
+O Vozly oferece uma experiência self-service para que cada empresa configure seu ambiente e seus agentes sem depender da equipe Vozly para mapear e parametrizar a operação.
+
+A configuração será guiada e validada pelo produto. O cliente define o comportamento do agente, fornece conhecimento, habilita ferramentas, configura integrações e regras de atendimento, testa o resultado e publica suas próprias versões.
+
+## Público e contexto de uso
+
+O produto é destinado a empresas que desejam automatizar atendimentos telefônicos e operações compatíveis com agentes de voz. O MVP não será condicionado a um segmento, setor ou processo empresarial específico.
+
+Os casos de uso são definidos e configurados pelo próprio cliente dentro das capacidades suportadas pelo Vozly. Integrações e operações específicas podem exigir conectores compatíveis ou configuração técnica adicional, mas não devem pressupor um único setor.
 
 ## Usuários
-- Administrador da empresa: configura workspace, usuários, agentes, permissões e indicadores.
-- Operador/atendente: acompanha solicitações e assume chamadas transferidas.
-- Cliente que liga: interage por telefone com o agente.
-- Administrador Vozly: opera a plataforma e presta suporte com acesso controlado.
 
-## Princípios
-- Configuração acessível para pessoas não técnicas.
-- Controle explícito sobre ações permitidas.
-- Transparência sobre o uso de agentes automatizados.
-- Respostas operacionais baseadas em fontes consultadas.
-- Transferência humana quando necessário.
-- Histórico e rastreabilidade de cada atendimento.
+- **Proprietário/administrador da empresa:** cria e configura o workspace, gerencia usuários, agentes, integrações e permissões.
+- **Gestor da operação:** configura conteúdo, ferramentas e regras de atendimento conforme suas permissões.
+- **Operador/atendente:** acompanha atendimentos e assume conversas transferidas.
+- **Cliente que liga:** interage por telefone com o agente de voz.
+- **Equipe Vozly:** opera o serviço, mantém a infraestrutura, oferece suporte e administra recursos da plataforma sem assumir a configuração operacional de cada cliente.
+
+## Responsabilidades
+
+### Cliente
+
+- Criar e manter as configurações do seu ambiente.
+- Gerenciar usuários e permissões internas.
+- Definir instruções, tom, horários e regras dos agentes.
+- Cadastrar e manter informações de conhecimento.
+- Habilitar e configurar ferramentas e integrações disponíveis.
+- Conectar números e definir regras de transferência, conforme suporte do produto.
+- Testar, publicar, pausar e revisar versões dos agentes.
+- Garantir que possui autorização e fundamento adequado para fornecer dados e conectar sistemas.
+
+### Vozly
+
+- Disponibilizar onboarding, interfaces e documentação para configuração self-service.
+- Proteger o isolamento entre empresas e controlar o acesso aos recursos.
+- Validar configurações e operações no backend.
+- Operar infraestrutura e adaptadores de fornecedores.
+- Disponibilizar histórico, observabilidade, controles de consumo e suporte.
+- Não acessar nem alterar a operação do cliente sem autorização e trilha de auditoria apropriadas.
 
 ## Jornada principal
-1. Empresa cria conta e workspace.
-2. Configura agente por fluxo guiado.
-3. Define apresentação, tom e instruções.
-4. Adiciona conhecimento e habilita ferramentas.
-5. Configura horários e transferência.
-6. Conecta número telefônico.
-7. Testa e publica o agente.
-8. Acompanha chamadas, resultados e consumo.
+
+1. A empresa cria sua conta e workspace.
+2. Convida usuários e define papéis.
+3. Segue o onboarding para configurar o primeiro agente.
+4. Define identidade, instruções, comportamento e regras.
+5. Cadastra ou importa conhecimento por meios suportados.
+6. Seleciona ferramentas e configura integrações disponíveis.
+7. Configura número, horários, fallback e transferência, conforme capacidades contratadas.
+8. Executa testes e corrige pendências apontadas pelo sistema.
+9. Publica uma versão do agente.
+10. Acompanha chamadas, resultados, consumo e falhas; atualiza e publica novas versões quando necessário.
+
+## Princípios do produto
+
+- Self-service como premissa de produto, não como etapa opcional posterior.
+- Configuração guiada, com validação e feedback claros.
+- Recursos compreensíveis para usuários não técnicos.
+- Extensibilidade por contratos de ferramentas e adaptadores.
+- Ações limitadas a capacidades explicitamente habilitadas.
+- Respostas operacionais fundamentadas em fontes confiáveis.
+- Transparência sobre atendimento automatizado.
+- Transferência humana quando necessária.
+- Histórico, auditoria e rastreabilidade.
+- Proteção de dados e isolamento entre empresas.
 
 ## Métricas
-Chamadas atendidas, resolvidas e transferidas; solicitações registradas; duração média; falhas por etapa; custo estimado por chamada/minuto; satisfação quando houver coleta válida. Uma transferência correta também pode representar sucesso.
 
-## Fora da visão inicial
-Substituir equipes humanas, suportar qualquer integração desde o lançamento, construtor visual complexo no MVP, confirmar agendamentos sem disponibilidade real, executar pagamentos sem controles específicos ou atender emergências.
+Ativação de workspaces; percentual de clientes que concluem onboarding sem intervenção; tempo até primeira publicação; agentes publicados; chamadas atendidas, resolvidas e transferidas; execuções de ferramentas concluídas; falhas por etapa; duração média; consumo por tenant; satisfação quando houver coleta válida.
+
+## Limites e princípios de segurança
+
+O agente não deve inventar informações, status, preços, prazos, disponibilidade ou confirmações. A IA interpreta a conversa e solicita operações; o backend valida tenant, permissões, dados e regras antes de executar qualquer ação.
+
+Self-service não significa execução irrestrita. O cliente só pode habilitar capacidades oferecidas pelo produto e autorizadas para seu tenant. Credenciais devem ser armazenadas e utilizadas por mecanismos seguros, nunca expostas ao modelo, frontend ou logs.
+
+O Vozly não tem como objetivo substituir integralmente equipes humanas. O atendimento humano permanece parte do fluxo, especialmente em situações ambíguas, sensíveis, excepcionais ou não suportadas.
