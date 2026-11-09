@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: vozly-backend
+  profiles:
+    default: local
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  info:
+    env:
+      enabled: false
+
+info:
+  app:
+    name: Vozly Backend
+    description: API da solução de agentes de voz inteligentes

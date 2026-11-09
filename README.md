@@ -1,4 +1,4 @@
-# Vozly
+# Vozly — Inteligência Artificial Aplicada ao Atendimento Telefônico
 
 **Solução de agentes de voz inteligentes para automatizar atendimentos e operações empresariais.**
 
@@ -6,21 +6,18 @@ O Vozly permite que empresas configurem e operem seus próprios agentes de voz p
 
 Cada empresa será responsável por configurar seu ambiente diretamente no produto, por meio de uma experiência self-service guiada. O Vozly fornece os recursos, validações, controles de segurança e infraestrutura necessários para que o cliente configure, teste, publique e acompanhe seus agentes sem depender da equipe Vozly para parametrizar sua operação.
 
-## Visão do MVP
+A Vozly é uma plataforma de recepcionista virtual baseada em inteligência artificial e atendimento por voz em português brasileiro.
 
 Permitir que uma empresa crie seu workspace, convide usuários, configure um agente, cadastre conhecimento, habilite ferramentas, conecte integrações e números telefônicos, teste o comportamento e publique uma versão. Depois, poderá acompanhar chamadas, resultados, transferências e consumo pelo painel.
 
 O MVP será desenhado sem depender de um segmento empresarial específico ou de um processo operacional pré-definido.
 
-## Stack inicial
+**Diferencial central:**
+> **A Vozly transforma ligações telefônicas em atendimentos organizados e ações operacionais.**
 
-- Frontend: Angular
-- Backend: Java + Spring Boot
-- Banco de dados: PostgreSQL
-- Cache/estado temporário: Redis, quando necessário
-- Integrações: telefonia, speech-to-text, LLM e text-to-speech; fornecedores ainda a selecionar.
+---
 
-## Documentação
+## 2. O Problema que Estou Resolvendo
 
 - [Visão do produto](docs/01-visao-do-produto.md)
 - [Requisitos do MVP](docs/02-requisitos-mvp.md)
@@ -35,7 +32,9 @@ O MVP será desenhado sem depender de um segmento empresarial específico ou de 
 - [ADR 001 — Monólito modular](docs/decisions/ADR-001-monolito-modular.md)
 - [ADR 002 — Configuração guiada self-service](docs/decisions/ADR-002-configuracao-guiada.md)
 
-## Princípios
+1. **Chamadas fora do expediente:** Clientes que ligam às 22h ou aos finais de semana encontram linhas mudas ou caixas postais ignoradas, resultando em oportunidades perdidas.
+2. **Sobrecarga operacional constante:** Interromper manutenções, atendimentos presenciais ou consultas para atender o telefone quebra o fluxo de trabalho e reduz a produtividade da equipe.
+3. **Informações desorganizadas:** Recados em papéis soltos ou anotações informais geram retrabalho e ruído na passagem de serviço.
 
 - Cada empresa configura e administra seu próprio ambiente.
 - Multi-tenant desde o início, com isolamento rigoroso.
@@ -54,4 +53,8 @@ O MVP será desenhado sem depender de um segmento empresarial específico ou de 
 
 ## Estado atual
 
-O repositório está na fase de definição e documentação. Provedores de telefonia, STT, LLM e TTS, custos, retenção de gravações, gestão de credenciais e estratégia de integrações ainda precisam ser detalhados e validados.
+A documentação do produto está consolidada e a fundação inicial do backend está em implementação na pasta `backend/`. Provedores de telefonia, STT, LLM e TTS, custos, retenção de gravações, gestão definitiva de credenciais e estratégia de integrações ainda precisam ser detalhados e validados.
+
+## Backend
+
+A aplicação inicial utiliza Java 21, Spring Boot 4.1.2, Maven, PostgreSQL e Flyway. Consulte o [guia do backend](backend/README.md) para configurar o ambiente, executar a aplicação e rodar os testes.
