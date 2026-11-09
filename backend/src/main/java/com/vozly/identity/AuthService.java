@@ -108,6 +108,69 @@ public class AuthService {
     }
 
     @Transactional
+    public AuthResult loginMicrosoft(String issuer, String subject, String email, String displayName,
+                                     String userAgent, String ipAddress) {
+        if (issuer == null || subject == null || email == null || !email.contains("@")) {
+            throw new BadCredentialsException("A conta Microsoft não forneceu uma identidade utilizável.");
+        }
+        List<UUID> linkedUsers = jdbc.query("""
+                SELECT user_id FROM vozly.external_identities
+                WHERE issuer = ? AND subject = ?
+                """, (rs, rowNum) -> rs.getObject("user_id", UUID.class), issuer, subject);
+
+        UUID userId;
+        if (!linkedUsers.isEmpty()) {
+            userId = linkedUsers.getFirst();
+        } else {
+            String normalizedEmail = normalizeEmail(email);
+            Integer existing = jdbc.queryForObject(
+                    "SELECT COUNT(*) FROM vozly.users WHERE email_normalized = ?",
+                    Integer.class, normalizedEmail);
+            if (existing != null && existing > 0) {
+                throw new AccountLinkRequiredException();
+            }
+
+            userId = UUID.randomUUID();
+            UUID tenantId = UUID.randomUUID();
+            String safeName = displayName == null || displayName.isBlank()
+                    ? normalizedEmail.substring(0, normalizedEmail.indexOf('@')) : displayName.trim();
+            String workspaceName = safeName + " workspace";
+            jdbc.update("""
+                    INSERT INTO vozly.users (id, name, email_normalized, password_hash)
+                    VALUES (?, ?, ?, NULL)
+                    """, userId, safeName.substring(0, Math.min(safeName.length(), 120)), normalizedEmail);
+            jdbc.update("INSERT INTO vozly.tenants (id, name, slug) VALUES (?, ?, ?)",
+                    tenantId, workspaceName, slugify(workspaceName) + "-" + tenantId.toString().substring(0, 8));
+            jdbc.update("""
+                    INSERT INTO vozly.memberships (id, tenant_id, user_id, role)
+                    VALUES (?, ?, ?, 'OWNER')
+                    """, UUID.randomUUID(), tenantId, userId);
+            jdbc.update("""
+                    INSERT INTO vozly.external_identities
+                        (id, user_id, provider, issuer, subject, email_at_provider)
+                    VALUES (?, ?, 'MICROSOFT', ?, ?, ?)
+                    """, UUID.randomUUID(), userId, issuer, subject, normalizedEmail);
+        }
+
+        List<UserMembership> memberships = jdbc.query("""
+                SELECT u.id AS user_id, u.password_hash, u.status AS user_status,
+                       m.tenant_id, m.role
+                FROM vozly.users u
+                JOIN vozly.memberships m ON m.user_id = u.id
+                JOIN vozly.tenants t ON t.id = m.tenant_id
+                WHERE u.id = ? AND u.status = 'ACTIVE'
+                  AND m.status = 'ACTIVE' AND t.status = 'ACTIVE'
+                ORDER BY m.created_at LIMIT 1
+                """, (rs, rowNum) -> new UserMembership(
+                    rs.getObject("user_id", UUID.class), rs.getString("password_hash"),
+                    rs.getString("user_status"), rs.getObject("tenant_id", UUID.class),
+                    rs.getString("role")), userId);
+        if (memberships.isEmpty()) throw new BadCredentialsException("Conta indisponível.");
+        UserMembership membership = memberships.getFirst();
+        return issueSession(userId, membership.tenantId(), membership.role(), userAgent, ipAddress);
+    }
+
+    @Transactional
     public AuthResult refresh(String rawToken, String userAgent, String ipAddress) {
         if (rawToken == null || rawToken.isBlank()) throw new BadCredentialsException("Sessão inválida.");
         String tokenHash = sha256(rawToken);
@@ -236,6 +299,9 @@ public class AuthService {
                                   Instant revokedAt) {}
     public record AuthResult(String accessToken, String refreshToken, long expiresIn,
                              UUID userId, UUID tenantId, String role) {}
+    public static class AccountLinkRequiredException extends RuntimeException {
+        public AccountLinkRequiredException() { super("Entre pela forma original de acesso para vincular a conta Microsoft."); }
+    }
     public static class EmailAlreadyRegisteredException extends RuntimeException {
         public EmailAlreadyRegisteredException() { super("E-mail já cadastrado."); }
     }
