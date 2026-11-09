@@ -29,10 +29,6 @@ interface SummaryData {
       <div class="container">
         <!-- Cabeçalho -->
         <div class="section-header">
-          <span class="section-tag">
-            <app-icon name="phone-call" [size]="14"></app-icon>
-            Simulação Interativa
-          </span>
           <h2 class="section-title">
             Veja uma conversa se transformar<br>
             <span class="gradient-text">em atendimento.</span>
@@ -503,7 +499,7 @@ interface SummaryData {
       font-size: 11px;
       font-weight: 600;
       padding: 4px 10px;
-      border-radius: var(--radius-pill);
+      border-radius: 4px;
       background: rgba(168, 85, 247, 0.12);
       border: 1px solid rgba(168, 85, 247, 0.3);
       color: var(--light-purple);

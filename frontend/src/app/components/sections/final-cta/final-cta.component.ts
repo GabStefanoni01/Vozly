@@ -25,11 +25,6 @@ import { IconComponent } from '../../ui/icon/icon.component';
 
           <!-- Conteúdo -->
           <div class="cta-content">
-            <span class="cta-tag">
-              <span class="pulse-dot"></span>
-              Próximo Passo
-            </span>
-
             <h2 class="cta-title">
               O próximo atendimento da sua empresa pode começar de uma nova maneira.
             </h2>
@@ -108,30 +103,6 @@ import { IconComponent } from '../../ui/icon/icon.component';
       margin: 0 auto;
       position: relative;
       z-index: 1;
-    }
-
-    .cta-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 14px;
-      background: rgba(109, 0, 255, 0.15);
-      border: 1px solid var(--purple-border);
-      border-radius: var(--radius-pill);
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--light-purple);
-      margin-bottom: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .pulse-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--light-purple);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--light-purple);
     }
 
     .cta-title {

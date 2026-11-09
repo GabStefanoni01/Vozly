@@ -23,10 +23,6 @@ interface FeatureBlock {
       <div class="container features-container">
         <!-- Cabeçalho da Seção -->
         <div class="section-header">
-          <span class="section-tag">
-            <app-icon name="sparkles" [size]="14"></app-icon>
-            Capacidades do Produto
-          </span>
           <h2 class="section-title">
             Inteligência aplicada ao <span class="gradient-text">atendimento.</span>
           </h2>

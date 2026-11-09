@@ -21,10 +21,6 @@ interface CallRecord {
       <div class="container">
         <!-- Cabeçalho -->
         <div class="section-header">
-          <span class="section-tag">
-            <app-icon name="layers" [size]="14"></app-icon>
-            Gestão & Controle
-          </span>
           <h2 class="section-title">
             Sua operação, em uma<br>
             <span class="gradient-text">visão mais organizada.</span>

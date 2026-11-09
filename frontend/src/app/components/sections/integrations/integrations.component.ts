@@ -261,7 +261,7 @@ interface IntegrationCategory {
       background: rgba(12, 12, 18, 0.75);
       backdrop-filter: blur(12px);
       border: 1px solid var(--purple-border);
-      border-radius: var(--radius-pill);
+      border-radius: var(--radius-md);
       font-size: 13px;
       flex-wrap: wrap;
       justify-content: center;

@@ -21,10 +21,6 @@ import { IconComponent } from '../icon/icon.component';
         </div>
 
         <div class="modal-header">
-          <span class="status-pill">
-            <span class="pulse-dot"></span>
-            Fase de Desenvolvimento Frontend
-          </span>
           <h3 class="modal-title">{{ title }}</h3>
           <p class="modal-desc">{{ description }}</p>
         </div>
