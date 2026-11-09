@@ -7,6 +7,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -84,6 +85,16 @@ public class SecurityConfiguration {
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .addFilterAfter(activeMembershipFilter, BearerTokenAuthenticationFilter.class)
                 .build();
+    }
+
+
+    @Bean
+    FilterRegistrationBean<ActiveMembershipFilter> disableContainerRegistration(
+            ActiveMembershipFilter activeMembershipFilter) {
+        FilterRegistrationBean<ActiveMembershipFilter> registration =
+                new FilterRegistrationBean<>(activeMembershipFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
