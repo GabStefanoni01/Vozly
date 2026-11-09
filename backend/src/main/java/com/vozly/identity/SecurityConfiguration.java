@@ -28,6 +28,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -68,9 +69,12 @@ public class SecurityConfiguration {
 
     @Bean
     SecurityFilterChain apiSecurity(HttpSecurity http, MicrosoftLoginSuccessHandler microsoftLoginSuccessHandler, MicrosoftLoginFailureHandler microsoftLoginFailureHandler, ActiveMembershipFilter activeMembershipFilter) throws Exception {
+        CsrfTokenRequestAttributeHandler csrfRequestHandler = new CsrfTokenRequestAttributeHandler();
+        csrfRequestHandler.setCsrfRequestAttributeName(null);
         return http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(csrfRequestHandler)
                         .ignoringRequestMatchers("/api/v1/auth/register", "/api/v1/auth/login"))
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
