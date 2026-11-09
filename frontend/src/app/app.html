@@ -1,0 +1,49 @@
+<!-- Cabeçalho / Navegação Fixa com Blur -->
+<app-header (openDemo)="handleOpenDemo($event)"></app-header>
+
+<!-- Conteúdo Principal da Landing Page Vozly -->
+<main id="main-content" class="main-wrapper">
+  <!-- 02: Hero Principal com Composição Visual Tecnológica -->
+  <app-hero (openDemo)="handleOpenDemo($event)"></app-hero>
+
+  <!-- 03: Faixa de Posicionamento e Pilares -->
+  <app-brand-strip></app-brand-strip>
+
+  <!-- 04: Apresentação do Problema -->
+  <app-problem></app-problem>
+
+  <!-- 05: Como a Vozly Funciona -->
+  <app-how-it-works></app-how-it-works>
+
+  <!-- 06: Demonstração Interativa da Ligação -->
+  <app-call-demo></app-call-demo>
+
+  <!-- 07: Recursos da Plataforma -->
+  <app-features></app-features>
+
+  <!-- 08: Aplicações por Segmento -->
+  <app-industries></app-industries>
+
+  <!-- 09: Painel de Controle Demonstrativo -->
+  <app-dashboard-preview></app-dashboard-preview>
+
+  <!-- 10: Ecossistema de Integrações e Expansão -->
+  <app-integrations></app-integrations>
+
+  <!-- 11: Governança, Segurança e Responsabilidade -->
+  <app-security></app-security>
+
+  <!-- 12: Chamada Final para Ação (CTA) -->
+  <app-final-cta (openDemo)="handleOpenDemo($event)"></app-final-cta>
+</main>
+
+<!-- 13: Rodapé Elegante & Institucional -->
+<app-footer (openDemo)="handleOpenDemo($event)"></app-footer>
+
+<!-- Modal Interativo Demonstrativo -->
+<app-demo-modal
+  [isOpen]="isModalOpen()"
+  [title]="modalTitle()"
+  [description]="modalDesc()"
+  (closeEvent)="handleCloseModal()"
+></app-demo-modal>
