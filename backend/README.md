@@ -46,7 +46,7 @@ Base: `/api/v1/auth`.
 | POST | `/logout` | Revoga a sessão e limpa cookie |
 | GET | `/me` | Retorna identidade e workspace do JWT |
 
-Microsoft SSO: iniciar em `GET /oauth2/authorization/microsoft`. Após autenticação, o backend grava refresh token em cookie HttpOnly e redireciona para `{FRONTEND_URL}/auth/sso/callback`. O frontend deve chamar `POST /api/v1/auth/refresh` com credenciais incluídas para obter o access token. Tokens não são enviados em query string.
+Microsoft SSO: iniciar em `GET /oauth2/authorization/microsoft`. Após autenticação, o backend grava refresh token em cookie HttpOnly e redireciona para `{FRONTEND_URL}/auth/sso/callback`. O frontend deve buscar `GET /api/v1/auth/csrf`, guardar o token CSRF retornado e chamar `POST /api/v1/auth/refresh` com `credentials: include` e o header `X-XSRF-TOKEN`. O mesmo fluxo CSRF é exigido para logout. Tokens não são enviados em query string.
 
 O access token dura 10 minutos. O refresh token é opaco, tem validade de 30 dias, é armazenado somente como SHA-256 no banco e sofre rotação a cada uso. O cookie usa HttpOnly, SameSite=Strict e Secure conforme `COOKIE_SECURE`.
 
@@ -79,6 +79,6 @@ O profile de teste usa H2 em memória. Para executar localmente contra Neon, con
 
 - Recuperação de senha, MFA e vínculo manual de uma conta local com Microsoft ainda não estão incluídos.
 - O primeiro tenant de uma conta é selecionado no login local; seleção/troca de workspace será implementada junto ao módulo de memberships.
-- Rate limiting distribuído e bloqueio progressivo por tentativas precisam ser concluídos antes de exposição pública.
+- Rate limiting por IP/conta e bloqueio progressivo por tentativas ainda precisam ser implementados antes de exposição pública.
 - O frontend Angular ainda precisa implementar as telas e o tratamento de cookies/refresh.
 - Configure HTTPS e `COOKIE_SECURE=true` em qualquer ambiente publicado.
