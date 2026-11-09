@@ -14,24 +14,29 @@ interface PillarItem {
   imports: [CommonModule, IconComponent],
   template: `
     <section class="brand-strip-section">
-      <div class="container">
-        <!-- Frase Central de Posicionamento -->
-        <div class="strip-header">
-          <p class="strip-statement">
-            Muito além de atender chamadas.
-            <span class="highlight">Uma nova forma de organizar operações.</span>
-          </p>
-        </div>
+      <!-- Linha de Reflexo Luminoso do Horizonte de Eventos -->
+      <div class="horizon-specular-line" aria-hidden="true"></div>
 
-        <!-- Pilares Tecnológicos da Plataforma -->
-        <div class="pillars-grid">
-          <div class="pillar-item" *ngFor="let pillar of pillars">
-            <div class="pillar-icon-box">
-              <app-icon [name]="pillar.icon" [size]="18" color="#A855F7"></app-icon>
-            </div>
-            <div class="pillar-text">
-              <span class="pillar-label">{{ pillar.label }}</span>
-              <span class="pillar-desc">{{ pillar.desc }}</span>
+      <div class="container">
+        <div class="horizon-glass-panel">
+          <!-- Frase Central de Posicionamento -->
+          <div class="strip-header">
+            <p class="strip-statement">
+              Muito além de atender chamadas.
+              <span class="highlight">Uma nova forma de organizar operações.</span>
+            </p>
+          </div>
+
+          <!-- Pilares Tecnológicos da Plataforma -->
+          <div class="pillars-grid">
+            <div class="pillar-item" *ngFor="let pillar of pillars">
+              <div class="pillar-icon-box">
+                <app-icon [name]="pillar.icon" [size]="18" color="#A855F7"></app-icon>
+              </div>
+              <div class="pillar-text">
+                <span class="pillar-label">{{ pillar.label }}</span>
+                <span class="pillar-desc">{{ pillar.desc }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -41,11 +46,34 @@ interface PillarItem {
   styles: [`
     .brand-strip-section {
       position: relative;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border-subtle);
+      background: linear-gradient(180deg, rgba(11, 11, 15, 0.72) 0%, var(--bg-secondary) 100%);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
       border-bottom: 1px solid var(--border-subtle);
-      padding: 40px 0;
-      z-index: 2;
+      padding: 44px 0;
+      z-index: 4;
+    }
+
+    /* Reflexo Luminoso Superior que Recebe a Luz do Buraco Negro */
+    .horizon-specular-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent 5%,
+        rgba(109, 0, 255, 0.35) 25%,
+        rgba(216, 180, 254, 0.85) 50%,
+        rgba(109, 0, 255, 0.35) 75%,
+        transparent 95%
+      );
+      box-shadow: 0 0 24px rgba(168, 85, 247, 0.55);
+    }
+
+    .horizon-glass-panel {
+      position: relative;
     }
 
     .strip-header {
@@ -97,15 +125,15 @@ interface PillarItem {
       align-items: center;
       gap: 12px;
       padding: 12px 14px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(168, 85, 247, 0.12);
       border-radius: var(--radius-md);
       transition: all var(--transition-base);
     }
 
     .pillar-item:hover {
-      background: rgba(109, 0, 255, 0.06);
-      border-color: rgba(168, 85, 247, 0.25);
+      background: rgba(109, 0, 255, 0.08);
+      border-color: rgba(168, 85, 247, 0.35);
       transform: translateY(-2px);
     }
 
@@ -113,8 +141,8 @@ interface PillarItem {
       width: 36px;
       height: 36px;
       border-radius: 8px;
-      background: rgba(109, 0, 255, 0.12);
-      border: 1px solid rgba(168, 85, 247, 0.2);
+      background: rgba(109, 0, 255, 0.14);
+      border: 1px solid rgba(168, 85, 247, 0.24);
       display: flex;
       align-items: center;
       justify-content: center;
