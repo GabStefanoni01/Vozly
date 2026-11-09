@@ -28,6 +28,10 @@ O MVP será desenhado sem depender de um segmento empresarial específico ou de 
 - [Domínio e dados](docs/04-dominio-e-dados.md)
 - [Roadmap](docs/05-roadmap.md)
 - [Jornada self-service e configuração](docs/06-jornada-self-service-e-configuracao.md)
+- [Catálogo de ferramentas e integrações](docs/07-catalogo-ferramentas-integracoes.md)
+- [Modelo relacional e persistência](docs/08-modelo-relacional-e-persistencia.md)
+- [Contratos da API administrativa](docs/09-contratos-api-administrativa.md)
+- [Runtime de voz, segurança e operação](docs/10-runtime-de-voz-seguranca-e-operacao.md)
 - [ADR 001 — Monólito modular](docs/decisions/ADR-001-monolito-modular.md)
 - [ADR 002 — Configuração guiada self-service](docs/decisions/ADR-002-configuracao-guiada.md)
 
