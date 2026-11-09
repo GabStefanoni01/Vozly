@@ -53,4 +53,8 @@ O MVP será desenhado sem depender de um segmento empresarial específico ou de 
 
 ## Estado atual
 
-O repositório está na fase de definição e documentação. Provedores de telefonia, STT, LLM e TTS, custos, retenção de gravações, gestão de credenciais e estratégia de integrações ainda precisam ser detalhados e validados.
+A documentação do produto está consolidada e a fundação inicial do backend está em implementação na pasta `backend/`. Provedores de telefonia, STT, LLM e TTS, custos, retenção de gravações, gestão definitiva de credenciais e estratégia de integrações ainda precisam ser detalhados e validados.
+
+## Backend
+
+A aplicação inicial utiliza Java 21, Spring Boot 4.1.2, Maven, PostgreSQL e Flyway. Consulte o [guia do backend](backend/README.md) para configurar o ambiente, executar a aplicação e rodar os testes.
