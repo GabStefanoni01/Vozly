@@ -35,6 +35,7 @@ public class AuthService {
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
     private final JwtEncoder jwtEncoder;
+    private final RefreshSessionRevocationService revocationService;
     private final String issuer;
     private final String audience;
 
@@ -42,11 +43,13 @@ public class AuthService {
             JdbcTemplate jdbc,
             PasswordEncoder passwordEncoder,
             JwtEncoder jwtEncoder,
+            RefreshSessionRevocationService revocationService,
             @Value("${vozly.security.jwt.issuer}") String issuer,
             @Value("${vozly.security.jwt.audience}") String audience) {
         this.jdbc = jdbc;
         this.passwordEncoder = passwordEncoder;
         this.jwtEncoder = jwtEncoder;
+        this.revocationService = revocationService;
         this.issuer = issuer;
         this.audience = audience;
     }
