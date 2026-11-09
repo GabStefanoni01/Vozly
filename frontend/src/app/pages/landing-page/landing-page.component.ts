@@ -51,10 +51,10 @@ import { DemoModalComponent } from '../../components/ui/demo-modal/demo-modal.co
       <app-brand-strip></app-brand-strip>
       <app-problem></app-problem>
       <app-how-it-works></app-how-it-works>
-      <app-call-demo></app-call-demo>
+      <app-call-demo (openDemo)="handleOpenDemo($event)"></app-call-demo>
       <app-features></app-features>
       <app-industries></app-industries>
-      <app-dashboard-preview></app-dashboard-preview>
+      <app-dashboard-preview (openDemo)="handleOpenDemo($event)"></app-dashboard-preview>
       <app-integrations></app-integrations>
       <app-security></app-security>
       <app-final-cta (openDemo)="handleOpenDemo($event)"></app-final-cta>
