@@ -62,6 +62,14 @@ src/app/
 
 ---
 
+## Ambiente de desenvolvimento
+
+- **Node.js:** `22.13.1` (definido em `.nvmrc`)
+- **Angular:** `21.2.x`, compatível com Node.js `22.13.1` conforme a matriz oficial de compatibilidade.
+- **TypeScript:** `5.9.x`.
+
+Após selecionar a versão do Node indicada em `.nvmrc`, execute `npm install` para instalar as dependências.
+
 ## 🚀 Comandos Disponíveis
 
 | Comando | Descrição |
