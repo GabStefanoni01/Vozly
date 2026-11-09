@@ -1,0 +1,1 @@
+-- Identity schema migration placeholder
