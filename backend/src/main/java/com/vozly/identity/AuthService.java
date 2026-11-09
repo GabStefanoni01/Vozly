@@ -181,7 +181,6 @@ public class AuthService {
                 SELECT id, family_id, user_id, expires_at, revoked_at
                 FROM vozly.refresh_token_sessions
                 WHERE token_hash = ?
-                FOR UPDATE
                 """, (rs, rowNum) -> new RefreshSession(
                     rs.getObject("id", UUID.class),
                     rs.getObject("family_id", UUID.class),
@@ -198,7 +197,7 @@ public class AuthService {
             throw new BadCredentialsException("Sessão inválida.");
         }
         if (session.expiresAt().isBefore(Instant.now())) {
-            jdbc.update("UPDATE vozly.refresh_token_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE id = ?", session.id());
+            revocationService.revokeFamily(session.familyId());
             throw new BadCredentialsException("Sessão expirada.");
         }
 
@@ -218,8 +217,12 @@ public class AuthService {
         if (memberships.isEmpty()) throw new BadCredentialsException("Sessão inválida.");
 
         UUID nextId = UUID.randomUUID();
-        jdbc.update("UPDATE vozly.refresh_token_sessions SET revoked_at = CURRENT_TIMESTAMP, replaced_by = ? WHERE id = ?",
-                nextId, session.id());
+        int revoked = jdbc.update("""
+                UPDATE vozly.refresh_token_sessions
+                SET revoked_at = CURRENT_TIMESTAMP, replaced_by = ?
+                WHERE id = ? AND revoked_at IS NULL
+                """, nextId, session.id());
+        if (revoked != 1) throw new BadCredentialsException("Sessão inválida.");
         UserMembership membership = memberships.getFirst();
         return issueSession(session.userId(), membership.tenantId(), membership.role(),
                 userAgent, ipAddress, session.familyId(), nextId);
