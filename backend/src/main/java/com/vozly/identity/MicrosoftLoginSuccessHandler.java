@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -53,6 +54,8 @@ public class MicrosoftLoginSuccessHandler implements AuthenticationSuccessHandle
                     .httpOnly(true).secure(secureCookie).sameSite("Strict")
                     .path("/api/v1/auth").maxAge(Duration.ofDays(30)).build();
             response.addHeader("Set-Cookie", refreshCookie.toString());
+            if (request.getSession(false) != null) request.getSession(false).invalidate();
+            SecurityContextHolder.clearContext();
             response.sendRedirect(UriComponentsBuilder.fromUriString(frontendUrl)
                     .path("/auth/sso/callback").build().toUriString());
         } catch (RuntimeException exception) {
