@@ -36,17 +36,17 @@ public class MicrosoftLoginSuccessHandler implements AuthenticationSuccessHandle
             if (!(authentication.getPrincipal() instanceof OidcUser oidcUser)) {
                 throw new IllegalStateException("A Microsoft não retornou uma identidade OIDC.");
             }
-            String tenantClaim = oidcUser.getClaimAsString("tid");
-            String issuer = oidcUser.getIssuer() == null ? null : oidcUser.getIssuer().toString();
+            String tenantClaim = oidcUser.getIdToken().getClaimAsString("tid");
+            String issuer = oidcUser.getIdToken().getIssuer() == null ? null : oidcUser.getIdToken().getIssuer().toString();
             if (!isMicrosoftTenantIssuer(issuer, tenantClaim)) {
                 throw new IllegalStateException("Emissor Microsoft inválido.");
             }
-            String email = oidcUser.getEmail();
+            String email = oidcUser.getClaimAsString("email");
             if (email == null || email.isBlank()) {
                 email = oidcUser.getClaimAsString("preferred_username");
             }
             AuthService.AuthResult result = authService.loginMicrosoft(
-                    issuer, oidcUser.getSubject(), email, oidcUser.getFullName(),
+                    issuer, oidcUser.getIdToken().getSubject(), email, oidcUser.getClaimAsString("name"),
                     request.getHeader("User-Agent"), request.getRemoteAddr());
 
             ResponseCookie refreshCookie = ResponseCookie.from("vozly_refresh", result.refreshToken())
