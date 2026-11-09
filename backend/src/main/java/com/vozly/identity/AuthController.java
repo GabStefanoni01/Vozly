@@ -31,7 +31,8 @@ public class AuthController {
     }
 
     @GetMapping("/csrf")
-    public Map<String, String> csrf(CsrfToken csrfToken) {
+    public Map<String, String> csrf(HttpServletRequest request) {
+        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
         return Map.of("token", csrfToken.getToken());
     }
 
