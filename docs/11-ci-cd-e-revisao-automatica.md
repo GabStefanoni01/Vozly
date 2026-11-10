@@ -5,7 +5,7 @@
 O repositório usa GitHub Actions para validar mudanças antes da integração e produzir artefatos de build. Os workflows são:
 
 - `.github/workflows/ci.yml`: compila e executa os testes do backend, compila o frontend e publica os artefatos em pushes para `develop` e `main`.
-- `.github/workflows/pr-security-review.yml`: executa CodeQL para Java/Kotlin e JavaScript/TypeScript e analisa dependências adicionadas ou atualizadas em Pull Requests.
+- `.github/workflows/pr-security-review.yml`: executa CodeQL para Java/Kotlin e JavaScript/TypeScript e Trivy para vulnerabilidades de dependências em Pull Requests.
 
 Os workflows são disparados em PRs com destino a `develop` ou `main`, em pushes nessas branches e, quando aplicável, manualmente. O CodeQL também executa semanalmente.
 
@@ -33,9 +33,11 @@ O `angular.json` não possui target de testes configurado. Portanto, o pipeline 
 
 Analisa o código Java/Kotlin e JavaScript/TypeScript com a suíte `security-extended`. Os alertas são publicados no recurso de segurança/code scanning do GitHub e podem apontar padrões vulneráveis no código alterado.
 
-### Dependency Review
+### Trivy Vulnerability Scan
 
-Analisa mudanças de dependências introduzidas pela PR e falha quando encontra vulnerabilidades com severidade alta ou crítica.
+Analisa os manifestos/lockfiles de dependências e o filesystem em busca de vulnerabilidades conhecidas. O check falha quando encontra vulnerabilidades HIGH ou CRITICAL para as quais há correção disponível. Os resultados SARIF são enviados ao GitHub Code Scanning.
+
+O Trivy foi escolhido no lugar do Dependency Review porque o Dependency Graph do repositório estava desabilitado e a action não conseguia executar. O Trivy não depende dessa configuração.
 
 Essas verificações são análise estática e de dependências. Não equivalem a uma revisão funcional feita por uma pessoa nem a uma revisão generativa por IA. Nenhum provedor de IA ou chave externa foi escolhido/configurado nesta etapa.
 
@@ -79,4 +81,4 @@ npm run build
 - Não existe deploy automático enquanto a hospedagem não for definida.
 - O frontend ainda não possui target de testes configurado no Angular CLI.
 - O lockfile npm precisa ser sincronizado com o manifesto antes de adotar `npm ci`.
-- CodeQL e Dependency Review são revisores automatizados baseados em regras e vulnerabilidades; uma revisão por IA exigiria escolher um provedor e armazenar sua chave em GitHub Secrets.
+- CodeQL e Trivy são revisores automatizados baseados em regras e vulnerabilidades; uma revisão por IA exigiria escolher um provedor e armazenar sua chave em GitHub Secrets.
