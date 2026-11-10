@@ -32,7 +32,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import com.vozly.security.PublicEndpointRateLimitFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -81,6 +81,12 @@ public class SecurityConfiguration {
         return http
                 .securityMatcher("/oauth2/**", "/login/oauth2/**")
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.deny())
+                        .contentTypeOptions(Customizer.withDefaults())
+                        .referrerPolicy(referrer -> referrer.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31_536_000)))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .oauth2Login(oauth2 -> oauth2.successHandler(successHandler).failureHandler(failureHandler))
                 .build();
@@ -88,7 +94,7 @@ public class SecurityConfiguration {
 
     @Bean
     @Order(2)
-    SecurityFilterChain apiSecurity(HttpSecurity http, ActiveMembershipFilter activeMembershipFilter, RateLimitFilter rateLimitFilter) throws Exception {
+    SecurityFilterChain apiSecurity(HttpSecurity http, ActiveMembershipFilter activeMembershipFilter, PublicEndpointRateLimitFilter rateLimitFilter) throws Exception {
         CsrfTokenRequestAttributeHandler csrfRequestHandler = new CsrfTokenRequestAttributeHandler();
         csrfRequestHandler.setCsrfRequestAttributeName(null);
         return http
@@ -101,7 +107,8 @@ public class SecurityConfiguration {
                         .frameOptions(frame -> frame.deny())
                         .contentTypeOptions(Customizer.withDefaults())
                         .referrerPolicy(referrer -> referrer.policy(
-                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31_536_000)))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
@@ -126,8 +133,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    FilterRegistrationBean<RateLimitFilter> disableRateLimitContainerRegistration(RateLimitFilter rateLimitFilter) {
-        FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(rateLimitFilter);
+    FilterRegistrationBean<PublicEndpointRateLimitFilter> disableRateLimitContainerRegistration(PublicEndpointRateLimitFilter rateLimitFilter) {
+        FilterRegistrationBean<PublicEndpointRateLimitFilter> registration = new FilterRegistrationBean<>(rateLimitFilter);
         registration.setEnabled(false);
         return registration;
     }
@@ -135,9 +142,6 @@ public class SecurityConfiguration {
     @Bean
     CorsConfigurationSource corsConfigurationSource(
             @Value("${vozly.security.cors.allowed-origin}") String allowedOrigin) {
-        if (allowedOrigin == null || allowedOrigin.isBlank() || "*".equals(allowedOrigin.trim())) {
-            throw new IllegalStateException("Configure uma origem frontend explícita; wildcard não é permitido.");
-        }
         CorsConfiguration configuration = new CorsConfiguration();
         if (allowedOrigin == null || allowedOrigin.isBlank() || "*".equals(allowedOrigin.trim())) {
             throw new IllegalStateException("FRONTEND_URL precisa ser uma origem explícita; wildcard não é permitido com credenciais.");
