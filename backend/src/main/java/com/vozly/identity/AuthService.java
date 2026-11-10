@@ -39,6 +39,7 @@ public class AuthService {
     private final String issuer;
     private final String audience;
     private final String dummyPasswordHash;
+    private final String dummyPasswordHash;
 
     public AuthService(
             JdbcTemplate jdbc,
