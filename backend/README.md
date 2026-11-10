@@ -20,7 +20,7 @@ Ative o profile `local` explicitamente no desenvolvimento (`SPRING_PROFILES_ACTI
 | `VOZLY_JWT_SECRET` | Segredo HMAC com pelo menos 32 bytes |
 | `VOZLY_JWT_ISSUER`, `VOZLY_JWT_AUDIENCE` | Validação de emissor e audiência dos JWTs |
 | `COOKIE_SECURE` | Use `true` em HTTPS; `false` somente no desenvolvimento HTTP local |
-| `FRONTEND_URL` | Origem/base do frontend e allowlist CORS |
+| `FRONTEND_URL` | Origem/base explícita do frontend e allowlist CORS; obrigatória fora do profile local |\n| `RATE_LIMIT_LOGIN_MAX`, `RATE_LIMIT_LOGIN_WINDOW` | Limite e janela de login (padrão: 10 tentativas/900 s) |\n| `RATE_LIMIT_REGISTER_MAX`, `RATE_LIMIT_REGISTER_WINDOW` | Limite e janela de cadastro (padrão: 5 tentativas/3600 s) |\n| `RATE_LIMIT_INTEREST_MAX`, `RATE_LIMIT_INTEREST_WINDOW` | Limite e janela de interesse (padrão: 5 tentativas/3600 s) |\n| `RATE_LIMIT_REFRESH_MAX`, `RATE_LIMIT_REFRESH_WINDOW` | Limite e janela de refresh (padrão: 30 tentativas/900 s) |
 | `MICROSOFT_TENANT_ID` | `organizations` para contas corporativas ou o tenant GUID específico |
 | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` | Credenciais do aplicativo Microsoft Entra ID |
 | `RATE_LIMIT_LOGIN_MAX`, `RATE_LIMIT_LOGIN_WINDOW` | Limite de login (padrão: 10 tentativas / 15 min) |
@@ -50,7 +50,7 @@ Base: `/api/v1/auth`.
 | POST | `/logout` | Revoga a sessão e limpa cookie |
 | GET | `/me` | Retorna identidade e workspace do JWT |
 
-Microsoft SSO: iniciar em `GET /oauth2/authorization/microsoft`. Após autenticação, o backend grava refresh token em cookie HttpOnly e redireciona para `{FRONTEND_URL}/auth/sso/callback`. O frontend deve buscar `GET /api/v1/auth/csrf`, guardar o token CSRF retornado e chamar `POST /api/v1/auth/refresh` com `credentials: include` e o header `X-XSRF-TOKEN`. O mesmo fluxo CSRF é exigido para logout. Tokens não são enviados em query string.
+Microsoft SSO: iniciar em `GET /oauth2/authorization/microsoft`. Após autenticação, o backend grava refresh token em cookie HttpOnly e redireciona para `{FRONTEND_URL}/auth/sso/callback`. O frontend busca `GET /api/v1/auth/csrf` antes de login, cadastro, refresh e logout e envia o token retornado no header `X-XSRF-TOKEN`, com `credentials: include`. O endpoint público de interesse é isento de CSRF porque não usa a sessão de autenticação. Tokens não são enviados em query string.
 
 O access token dura 10 minutos. O refresh token é opaco, tem validade de 30 dias, é armazenado somente como SHA-256 no banco e sofre rotação a cada uso. O cookie usa HttpOnly, SameSite=Strict e Secure conforme `COOKIE_SECURE`.
 
@@ -98,7 +98,7 @@ A solicitação é armazenada em `vozly.interest_submissions`. O endpoint é pú
 
 ## Persistência
 
-Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse. A migration V4 cria os buckets persistentes de rate limiting, com limpeza oportunista de janelas antigas.
+Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse. A migration V4 cria buckets de rate limit no PostgreSQL, compartilhados entre instâncias do backend. A migration V4 cria os buckets persistentes de rate limiting, com limpeza oportunista de janelas antigas.
 
 ## Executar e testar
 
@@ -132,7 +132,7 @@ O profile de teste usa H2 em memória. Para executar localmente contra Neon, con
 
 ## Desenvolvimento local — autenticação e CORS
 
-Com o perfil local ativo, o backend aceita o frontend em `http://localhost:4200` (configurável por `FRONTEND_URL`) e define `COOKIE_SECURE=false` por padrão para permitir cookies HTTP em localhost. Em produção, mantenha cookies Secure habilitados e use HTTPS.
+Inicie o backend com `SPRING_PROFILES_ACTIVE=local`. Com esse perfil, o backend aceita o frontend em `http://localhost:4200` (configurável por `FRONTEND_URL`) e define `COOKIE_SECURE=false` por padrão para permitir cookies HTTP em localhost. Em produção, mantenha cookies Secure habilitados e use HTTPS.
 
 Para habilitar Microsoft Entra ID localmente, configure `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` e `MICROSOFT_TENANT_ID`. Cadastre no aplicativo Entra ID o redirect URI do backend: `http://localhost:8080/login/oauth2/code/microsoft`. O callback da aplicação é `http://localhost:4200/auth/sso/callback`.
 
