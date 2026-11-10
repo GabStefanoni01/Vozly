@@ -20,7 +20,7 @@ public class InterestService {
         jdbc.update("""
                 INSERT INTO vozly.interest_submissions (id, company, segment, email)
                 VALUES (?, ?, ?, ?)
-                """, id, company, segment, email);
+                """, id, company.trim(), segment, email.trim().toLowerCase(java.util.Locale.ROOT));
         return id;
     }
 }
