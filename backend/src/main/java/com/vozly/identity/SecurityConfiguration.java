@@ -29,6 +29,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
@@ -87,7 +88,7 @@ public class SecurityConfiguration {
 
     @Bean
     @Order(2)
-    SecurityFilterChain apiSecurity(HttpSecurity http, ActiveMembershipFilter activeMembershipFilter) throws Exception {
+    SecurityFilterChain apiSecurity(HttpSecurity http, ActiveMembershipFilter activeMembershipFilter, RateLimitFilter rateLimitFilter) throws Exception {
         CsrfTokenRequestAttributeHandler csrfRequestHandler = new CsrfTokenRequestAttributeHandler();
         csrfRequestHandler.setCsrfRequestAttributeName(null);
         return http
@@ -110,6 +111,7 @@ public class SecurityConfiguration {
                                 "/api/v1/interests").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .addFilterBefore(rateLimitFilter, BearerTokenAuthenticationFilter.class)
                 .addFilterAfter(activeMembershipFilter, BearerTokenAuthenticationFilter.class)
                 .build();
     }
@@ -124,13 +126,23 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    FilterRegistrationBean<RateLimitFilter> disableRateLimitContainerRegistration(RateLimitFilter rateLimitFilter) {
+        FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(rateLimitFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
     CorsConfigurationSource corsConfigurationSource(
             @Value("${vozly.security.cors.allowed-origin}") String allowedOrigin) {
         if (allowedOrigin == null || allowedOrigin.isBlank() || "*".equals(allowedOrigin.trim())) {
             throw new IllegalStateException("Configure uma origem frontend explícita; wildcard não é permitido.");
         }
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(allowedOrigin));
+        if (allowedOrigin == null || allowedOrigin.isBlank() || "*".equals(allowedOrigin.trim())) {
+            throw new IllegalStateException("FRONTEND_URL precisa ser uma origem explícita; wildcard não é permitido com credenciais.");
+        }
+        configuration.setAllowedOrigins(List.of(allowedOrigin.trim()));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
