@@ -52,7 +52,7 @@ O deploy automático não foi habilitado porque o Vozly ainda não possui proved
 Depois que os workflows executarem ao menos uma vez, configurar em **Settings → Rules → Rulesets** (ou Branch protection rules):
 
 - Exigir Pull Request para atualizar `develop` e `main`.
-- Exigir que os checks de backend, frontend, CodeQL e Dependency Review estejam aprovados.
+- Exigir que os checks de backend, frontend, CodeQL e Vulnerability Scan estejam aprovados.
 - Exigir branch atualizada em relação à base antes do merge.
 - Bloquear force push e exclusão das branches protegidas.
 - Manter aprovação humana antes de merge; a automação não deve mesclar PRs.
