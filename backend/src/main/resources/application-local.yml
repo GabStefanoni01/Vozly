@@ -21,7 +21,6 @@ vozly:
     cookies:
       secure: ${COOKIE_SECURE:false}
 
-spring:
   security:
     oauth2:
       client:
@@ -33,6 +32,7 @@ spring:
           microsoft:
             authorization-uri: https://login.microsoftonline.com/${MICROSOFT_TENANT_ID:organizations}/oauth2/v2.0/authorize
             token-uri: https://login.microsoftonline.com/${MICROSOFT_TENANT_ID:organizations}/oauth2/v2.0/token
+
 logging:
   level:
     org.flywaydb: INFO
