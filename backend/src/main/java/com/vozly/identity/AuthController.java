@@ -64,7 +64,8 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CookieValue(name = REFRESH_COOKIE, required = false) String token) {
         authService.logout(token);
-        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString()).build();
+        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
+                .header(HttpHeaders.CACHE_CONTROL, "no-store").build();
     }
 
     @GetMapping("/me")
@@ -79,6 +80,8 @@ public class AuthController {
                 .path("/api/v1/auth").maxAge(Duration.ofDays(30)).build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .header(HttpHeaders.PRAGMA, "no-cache")
                 .body(new TokenResponse(result.accessToken(), "Bearer", result.expiresIn(),
                         result.userId(), result.tenantId(), result.role()));
     }
