@@ -50,9 +50,38 @@ Microsoft SSO: iniciar em `GET /oauth2/authorization/microsoft`. Após autentica
 
 O access token dura 10 minutos. O refresh token é opaco, tem validade de 30 dias, é armazenado somente como SHA-256 no banco e sofre rotação a cada uso. O cookie usa HttpOnly, SameSite=Strict e Secure conforme `COOKIE_SECURE`.
 
+## Registro de interesse da landing page
+
+O formulário atual do modal envia os mesmos três campos apresentados na interface:
+
+`POST /api/v1/interests`
+
+Request:
+
+```json
+{
+  "company": "Empresa Exemplo",
+  "segment": "assistencia",
+  "email": "contato@empresa.com"
+}
+```
+
+Valores de `segment` aceitos, correspondentes às opções do Angular: `assistencia`, `clinica`, `oficina`, `manutencao`, `servicos` e `outros`.
+
+Resposta `201 Created`:
+
+```json
+{
+  "id": "uuid",
+  "status": "RECEIVED"
+}
+```
+
+A solicitação é armazenada em `vozly.interest_submissions`. O endpoint é público porque é utilizado na landing page antes da autenticação. Ele não cria usuário/workspace, não dispara e-mail e não promete contato automático.
+
 ## Persistência
 
-Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro cria usuário, tenant e membership OWNER na mesma transação.
+Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse.
 
 ## Executar e testar
 
@@ -80,5 +109,6 @@ O profile de teste usa H2 em memória. Para executar localmente contra Neon, con
 - Recuperação de senha, MFA e vínculo manual de uma conta local com Microsoft ainda não estão incluídos.
 - O primeiro tenant de uma conta é selecionado no login local; seleção/troca de workspace será implementada junto ao módulo de memberships.
 - Rate limiting por IP/conta e bloqueio progressivo por tentativas ainda precisam ser implementados antes de exposição pública.
-- O frontend Angular ainda precisa implementar as telas e o tratamento de cookies/refresh.
+- O formulário de login Angular ainda simula a autenticação e precisa ser conectado ao endpoint existente. A interface não possui formulário de criação de conta; o link atual apenas informa sobre o cadastro antecipado.
+- O botão social atualmente exibido no Angular menciona Google, enquanto o backend está configurado para Microsoft Entra ID. Alinhar a interface e a decisão de provedor antes da integração social.
 - Configure HTTPS e `COOKIE_SECURE=true` em qualquer ambiente publicado.
