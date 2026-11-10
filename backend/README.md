@@ -10,7 +10,7 @@ Backend do Vozly, construído como monólito modular com Java 21 e Spring Boot 4
 
 ## Configuração
 
-O profile padrão é `local`. O Spring Boot não carrega arquivos `.env` automaticamente: exporte as variáveis no terminal ou use um carregador de ambiente local. Nunca versione `.env` nem credenciais reais.
+Ative o profile `local` explicitamente no desenvolvimento (`SPRING_PROFILES_ACTIVE=local`). Sem esse profile, o backend exige configuração explícita de banco, JWT, origem do frontend e credenciais Microsoft. O Spring Boot não carrega arquivos `.env` automaticamente: exporte as variáveis no terminal ou use um carregador de ambiente local. Nunca versione `.env` nem credenciais reais.
 
 | Variável | Descrição |
 |---|---|
@@ -23,6 +23,10 @@ O profile padrão é `local`. O Spring Boot não carrega arquivos `.env` automat
 | `FRONTEND_URL` | Origem/base do frontend e allowlist CORS |
 | `MICROSOFT_TENANT_ID` | `organizations` para contas corporativas ou o tenant GUID específico |
 | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` | Credenciais do aplicativo Microsoft Entra ID |
+| `RATE_LIMIT_LOGIN_MAX`, `RATE_LIMIT_LOGIN_WINDOW` | Limite de login (padrão: 10 tentativas / 15 min) |
+| `RATE_LIMIT_REGISTER_MAX`, `RATE_LIMIT_REGISTER_WINDOW` | Limite de cadastro (padrão: 5 / hora) |
+| `RATE_LIMIT_REFRESH_MAX`, `RATE_LIMIT_REFRESH_WINDOW` | Limite de refresh (padrão: 30 / 15 min) |
+| `RATE_LIMIT_INTEREST_MAX`, `RATE_LIMIT_INTEREST_WINDOW` | Limite de interesse (padrão: 5 / hora) |
 
 ### Microsoft Entra ID
 
@@ -94,7 +98,7 @@ A solicitação é armazenada em `vozly.interest_submissions`. O endpoint é pú
 
 ## Persistência
 
-Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse.
+Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse. A migration V4 cria os buckets persistentes de rate limiting, com limpeza oportunista de janelas antigas.
 
 ## Executar e testar
 
@@ -121,9 +125,9 @@ O profile de teste usa H2 em memória. Para executar localmente contra Neon, con
 
 - Recuperação de senha, MFA e vínculo manual de uma conta local com Microsoft ainda não estão incluídos.
 - O primeiro tenant de uma conta é selecionado no login local; seleção/troca de workspace será implementada junto ao módulo de memberships.
-- Rate limiting por IP/conta e bloqueio progressivo por tentativas ainda precisam ser implementados antes de exposição pública.
+- Login, cadastro, refresh e interesse possuem rate limiting por IP persistido no PostgreSQL, compartilhado entre instâncias. O limite excedido retorna HTTP 429. O endereço é obtido de `request.getRemoteAddr()`; `X-Forwarded-For` não é confiável sem configuração explícita de proxy confiável.
 - O frontend mantém o access token somente em memória; ao recarregar a página, a próxima consulta autenticada deve renovar a sessão com o refresh cookie.
-- Configure HTTPS e `COOKIE_SECURE=true` em qualquer ambiente publicado.
+- Configure HTTPS e `COOKIE_SECURE=true` em qualquer ambiente publicado. O profile local é o único que contém valores de desenvolvimento para JWT e Microsoft; não o ative em produção.
 
 
 ## Desenvolvimento local — autenticação e CORS
