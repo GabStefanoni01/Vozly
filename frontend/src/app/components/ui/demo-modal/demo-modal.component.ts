@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../icon/icon.component';
+import { ApiAuthService } from '../../../services/api-auth.service';
 
 @Component({
   selector: 'app-demo-modal',
@@ -44,6 +45,7 @@ import { IconComponent } from '../icon/icon.component';
             <input
               id="companyName"
               type="text"
+              maxlength="160"
               name="companyName"
               [(ngModel)]="formData.company"
               placeholder="Ex.: Assistência Técnica Silva ou Clínica Viva"
@@ -68,6 +70,7 @@ import { IconComponent } from '../icon/icon.component';
             <input
               id="userEmail"
               type="email"
+              maxlength="320"
               name="userEmail"
               [(ngModel)]="formData.email"
               placeholder="seuemail@empresa.com.br"
@@ -75,16 +78,18 @@ import { IconComponent } from '../icon/icon.component';
             />
           </div>
 
+          <p *ngIf="error" class="form-error" role="alert">{{ error }}</p>
+
           <div class="disclaimer-note">
             <app-icon name="alert-circle" [size]="16" color="#A855F7"></app-icon>
             <span>
-              Ambiente demonstrativo. O backend e as integrações telefônicas reais serão conectadas nas próximas etapas da Vozly.
+              Seus dados serão enviados à Vozly para registrar seu interesse na plataforma.
             </span>
           </div>
 
           <div class="modal-actions">
-            <button type="submit" class="btn btn-primary" [disabled]="!formData.email">
-              Registrar Interesse
+            <button type="submit" class="btn btn-primary" [disabled]="loading || !formData.company || !formData.email">
+              {{ loading ? 'Enviando...' : 'Registrar Interesse' }}
               <app-icon name="arrow-right" [size]="16"></app-icon>
             </button>
           </div>
@@ -237,6 +242,8 @@ import { IconComponent } from '../icon/icon.component';
       line-height: 1.4;
     }
 
+.form-error { color: #FCA5A5; font-size: 13px; line-height: 1.4; }
+
     .modal-actions {
       margin-top: 8px;
     }
@@ -299,11 +306,15 @@ export class DemoModalComponent {
   @Output() closeEvent = new EventEmitter<void>();
 
   submitted = false;
+  loading = false;
+  error: string | null = null;
   formData = {
     company: '',
     segment: 'assistencia',
     email: ''
   };
+
+  constructor(private readonly api: ApiAuthService) {}
 
   close(): void {
     this.closeEvent.emit();
@@ -315,14 +326,26 @@ export class DemoModalComponent {
     }
   }
 
-  submitForm(): void {
-    if (this.formData.email) {
+  async submitForm(): Promise<void> {
+    this.error = null;
+    this.loading = true;
+    try {
+      await this.api.submitInterest({
+        company: this.formData.company.trim(),
+        segment: this.formData.segment,
+        email: this.formData.email.trim()
+      });
       this.submitted = true;
+    } catch {
+      this.error = 'Não foi possível registrar seu interesse. Tente novamente.';
+    } finally {
+      this.loading = false;
     }
   }
 
   resetAndClose(): void {
     this.submitted = false;
+    this.error = null;
     this.formData = { company: '', segment: 'assistencia', email: '' };
     this.close();
   }

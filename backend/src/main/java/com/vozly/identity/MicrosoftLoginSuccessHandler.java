@@ -54,6 +54,8 @@ public class MicrosoftLoginSuccessHandler implements AuthenticationSuccessHandle
                     .httpOnly(true).secure(secureCookie).sameSite("Strict")
                     .path("/api/v1/auth").maxAge(Duration.ofDays(30)).build();
             response.addHeader("Set-Cookie", refreshCookie.toString());
+            response.setHeader("Cache-Control", "no-store");
+            response.setHeader("Pragma", "no-cache");
             if (request.getSession(false) != null) request.getSession(false).invalidate();
             SecurityContextHolder.clearContext();
             response.sendRedirect(UriComponentsBuilder.fromUriString(frontendUrl)

@@ -38,6 +38,7 @@ public class AuthService {
     private final RefreshSessionRevocationService revocationService;
     private final String issuer;
     private final String audience;
+    private final String dummyPasswordHash;
 
     public AuthService(
             JdbcTemplate jdbc,
@@ -52,6 +53,7 @@ public class AuthService {
         this.revocationService = revocationService;
         this.issuer = issuer;
         this.audience = audience;
+        this.dummyPasswordHash = passwordEncoder.encode(UUID.randomUUID().toString());
     }
 
     @Transactional
@@ -101,10 +103,17 @@ public class AuthService {
                     rs.getObject("tenant_id", UUID.class),
                     rs.getString("role")), normalizedEmail);
 
-        if (matches.isEmpty()) throw new BadCredentialsException("Credenciais inválidas.");
+        if (matches.isEmpty()) {
+            // Keep the expensive password-hash operation for unknown e-mails to reduce timing-based enumeration.
+            passwordEncoder.matches(password, dummyPasswordHash);
+            throw new BadCredentialsException("Credenciais inválidas.");
+        }
         UserMembership user = matches.getFirst();
-        if (!"ACTIVE".equals(user.userStatus()) || user.passwordHash() == null
-                || !passwordEncoder.matches(password, user.passwordHash())) {
+        if (!"ACTIVE".equals(user.userStatus()) || user.passwordHash() == null) {
+            passwordEncoder.matches(password, dummyPasswordHash);
+            throw new BadCredentialsException("Credenciais inválidas.");
+        }
+        if (!passwordEncoder.matches(password, user.passwordHash())) {
             throw new BadCredentialsException("Credenciais inválidas.");
         }
         return issueSession(user.userId(), user.tenantId(), user.role(), userAgent, ipAddress);
