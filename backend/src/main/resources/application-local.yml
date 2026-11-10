@@ -13,6 +13,10 @@ spring:
     schemas: vozly
     default-schema: vozly
     locations: classpath:db/migration
+  servlet:
+    session:
+      cookie:
+        secure: ${COOKIE_SECURE:false}
   security:
     oauth2:
       client:
