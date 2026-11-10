@@ -1,14 +1,13 @@
-import { Component, HostListener, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, HostListener, inject, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IconComponent } from '../../ui/icon/icon.component';
-import { DashboardStateService } from '../../../services/dashboard-state.service';
+import { SessionStore } from '../../../core/api/session.store';
+import { TenantStatus } from '../../../core/api/dashboard-api.models';
 
 interface NavItem {
   label: string;
   path: string;
   icon: string;
-  badge?: string;
 }
 
 interface NavGroup {
@@ -16,271 +15,251 @@ interface NavGroup {
   items: NavItem[];
 }
 
+/**
+ * Shell do painel (sidebar + header).
+ *
+ * Dados do shell vêm do SessionStore:
+ * - Usuário: GET /api/v1/me (⏳ pendente — módulo identity)
+ * - Workspace: GET /api/v1/tenants/current (⏳ pendente — módulo tenants)
+ * - Status da API: GET /actuator/health (✅ disponível)
+ */
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IconComponent],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, IconComponent],
   template: `
     <div class="dash-shell">
-      <!-- Luzes de Fundo Atmosféricas Neon Violeta -->
-      <div class="ambient-glow glow-purple shell-glow-1" aria-hidden="true"></div>
-      <div class="ambient-glow glow-violet shell-glow-2" aria-hidden="true"></div>
-
-      <!-- Barra de Aviso Demonstrativo Superior -->
-      <aside class="demo-banner" aria-label="Aviso de ambiente de demonstração">
-        <div class="demo-banner-inner">
-          <span class="demo-badge">
-            <span class="demo-dot"></span>
-            FASE 02 — MODO DEMONSTRAÇÃO
-          </span>
-          <span class="demo-text">
-            Você está navegando na interface visual e interativa da Vozly. Dados e simulações operam localmente em preparação para integração com a API Spring Boot.
-          </span>
-          <a routerLink="/" class="demo-home-link">
-            <span>Ir para Landing Page</span>
-            <app-icon name="external-link" [size]="14"></app-icon>
+      <!-- SIDEBAR -->
+      <aside
+        class="dash-sidebar"
+        [class.collapsed]="isCollapsed()"
+        [class.mobile-open]="mobileNavOpen()"
+        aria-label="Menu principal"
+      >
+        <div class="sidebar-header">
+          <a routerLink="/dashboard" class="sidebar-brand" aria-label="Vozly — Visão geral">
+            @if (isCollapsed()) {
+              <img src="brand/vozly-symbol-pure.png" alt="Vozly" class="brand-symbol" width="166" height="112" />
+            } @else {
+              <img src="brand/vozly-logo-horizontal.png" alt="Vozly" class="brand-logo" width="433" height="142" />
+              <span class="brand-chip">Painel</span>
+            }
           </a>
+
+          <button class="mobile-close-btn" (click)="closeMobileNav()" aria-label="Fechar menu">
+            <app-icon name="x" [size]="20"></app-icon>
+          </button>
+        </div>
+
+        <!-- Workspace ativo — GET /api/v1/tenants/current -->
+        @if (!isCollapsed()) {
+          <div class="workspace-pill">
+            <span class="workspace-icon">
+              <app-icon name="building" [size]="16" color="#A855F7"></app-icon>
+            </span>
+            <span class="workspace-details">
+              @if (session.tenant.data(); as tenant) {
+                <span class="ws-name">{{ tenant.name }}</span>
+                <span class="ws-plan">{{ tenantStatusLabel[tenant.status] }}</span>
+              } @else {
+                <span class="ws-name">Workspace</span>
+                <span class="ws-plan ws-pending" title="Implementar GET /api/v1/tenants/current">Aguardando /tenants/current</span>
+              }
+            </span>
+          </div>
+        }
+
+        <nav class="sidebar-nav" aria-label="Navegação do painel">
+          @for (group of navGroups; track group.groupName) {
+            <div class="nav-group">
+              @if (!isCollapsed()) {
+                <span class="group-title">{{ group.groupName }}</span>
+              }
+              <ul class="nav-list">
+                @for (item of group.items; track item.path) {
+                  <li>
+                    <a
+                      [routerLink]="item.path"
+                      routerLinkActive="active"
+                      [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
+                      (click)="closeMobileNav()"
+                      class="nav-link"
+                      [title]="item.label"
+                    >
+                      <span class="nav-icon-wrapper">
+                        <app-icon [name]="item.icon" [size]="18"></app-icon>
+                      </span>
+                      @if (!isCollapsed()) {
+                        <span class="nav-label">{{ item.label }}</span>
+                      }
+                    </a>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </nav>
+
+        <div class="sidebar-footer">
+          @if (!isCollapsed()) {
+            <div class="api-card" [attr.data-state]="apiState()">
+              <span class="api-dot"></span>
+              <span class="api-info">
+                <span class="api-title">API {{ apiLabel() }}</span>
+                <span class="api-desc">{{ apiDescription() }}</span>
+              </span>
+            </div>
+          }
+
+          <button
+            class="collapse-toggle-btn"
+            (click)="toggleCollapse()"
+            [title]="isCollapsed() ? 'Expandir menu' : 'Recolher menu'"
+            aria-label="Alternar tamanho da barra lateral"
+          >
+            <span class="collapse-icon" [class.flipped]="!isCollapsed()">
+              <app-icon name="chevron-right" [size]="16"></app-icon>
+            </span>
+            @if (!isCollapsed()) {
+              <span>Recolher menu</span>
+            }
+          </button>
         </div>
       </aside>
 
-      <div class="dash-body">
-        <!-- ==============================================
-             SIDEBAR LATERAL (Conforme Imagem 02 de Referência)
-             ============================================== -->
-        <aside
-          class="dash-sidebar"
-          [class.collapsed]="isCollapsed()"
-          [class.mobile-open]="mobileNavOpen()"
-          aria-label="Menu principal"
-        >
-          <!-- Topo da Sidebar: Logo & Workspace -->
-          <div class="sidebar-header">
-            <a routerLink="/dashboard" class="sidebar-brand">
-              <div class="brand-logo-pill">
-                <img src="brand/vozly-app-icon.png" alt="Vozly" class="brand-logo-img" />
-              </div>
-              <div class="brand-info" *ngIf="!isCollapsed()">
-                <span class="brand-name">Vozly <span class="brand-ai">AI</span></span>
-                <span class="brand-tag">Voice Operating System</span>
-              </div>
-            </a>
+      @if (mobileNavOpen()) {
+        <div class="sidebar-overlay" (click)="closeMobileNav()" aria-hidden="true"></div>
+      }
 
-            <!-- Botão de Fechar Mobile -->
-            <button class="mobile-close-btn" (click)="closeMobileNav()" aria-label="Fechar menu">
-              <app-icon name="x" [size]="20"></app-icon>
+      <!-- ÁREA PRINCIPAL -->
+      <div class="dash-main-area">
+        <header class="dash-header">
+          <div class="header-left">
+            <button class="mobile-menu-btn" (click)="openMobileNav()" aria-label="Abrir menu lateral">
+              <app-icon name="menu" [size]="22"></app-icon>
             </button>
+
+            <!--
+              Busca global: não há endpoint de busca em docs/09.
+              Quando existir (ex.: GET /api/v1/search?q=), ligar este campo com
+              debounce e resultados agrupados por recurso, sempre tenant-scoped.
+            -->
+            <label class="header-search" title="Busca global ainda não disponível na API">
+              <app-icon name="search" [size]="16" color="#71717A"></app-icon>
+              <input
+                type="search"
+                placeholder="Buscar agentes, chamadas, conhecimento…"
+                class="search-input"
+                aria-label="Busca global (indisponível)"
+                disabled
+              />
+              <span class="search-shortcut">Em breve</span>
+            </label>
           </div>
 
-          <!-- Seletor / Identificador de Workspace Ativo -->
-          <div class="workspace-pill" *ngIf="!isCollapsed()">
-            <div class="workspace-icon">
-              <app-icon name="building" [size]="16" color="#A855F7"></app-icon>
-            </div>
-            <div class="workspace-details">
-              <span class="ws-name">{{ state.currentWorkspace().name }}</span>
-              <span class="ws-plan">{{ state.currentWorkspace().plan }}</span>
-            </div>
-          </div>
-
-          <!-- Grupos de Navegação -->
-          <nav class="sidebar-nav" aria-label="Navegação do painel">
-            <div class="nav-group" *ngFor="let group of navGroups">
-              <span class="group-title" *ngIf="!isCollapsed()">{{ group.groupName }}</span>
-
-              <ul class="nav-list">
-                <li *ngFor="let item of group.items">
-                  <a
-                    [routerLink]="item.path"
-                    routerLinkActive="active"
-                    [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
-                    (click)="closeMobileNav()"
-                    class="nav-link"
-                    [title]="item.label"
-                  >
-                    <div class="nav-icon-wrapper">
-                      <app-icon [name]="item.icon" [size]="18"></app-icon>
-                    </div>
-                    <span class="nav-label" *ngIf="!isCollapsed()">{{ item.label }}</span>
-                    <span class="nav-item-badge" *ngIf="item.badge && !isCollapsed()">{{ item.badge }}</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </nav>
-
-          <!-- Card Inferior de Suporte & Recolhimento -->
-          <div class="sidebar-footer">
-            <div class="support-card" *ngIf="!isCollapsed()">
-              <div class="support-icon">
-                <app-icon name="sparkles" [size]="18" color="#A855F7"></app-icon>
-              </div>
-              <div class="support-info">
-                <span class="support-title">Documentação Ativa</span>
-                <span class="support-desc">Guia self-service e contratos</span>
-              </div>
+          <div class="header-right">
+            <div class="date-pill hide-mobile">
+              <app-icon name="calendar" [size]="15" color="#A855F7"></app-icon>
+              <span>{{ todayLabel }}</span>
             </div>
 
-            <!-- Botão Recolher / Expandir Sidebar (Desktop) -->
-            <button
-              class="collapse-toggle-btn"
-              (click)="toggleCollapse()"
-              [title]="isCollapsed() ? 'Expandir Menu' : 'Recolher Menu'"
-              aria-label="Alternar tamanho da barra lateral"
-            >
-              <app-icon [name]="isCollapsed() ? 'chevron-right' : 'x'" [size]="18"></app-icon>
-              <span class="collapse-label" *ngIf="!isCollapsed()">Recolher painel</span>
-            </button>
-          </div>
-        </aside>
-
-        <!-- Overlay Mobile -->
-        <div
-          class="sidebar-overlay"
-          *ngIf="mobileNavOpen()"
-          (click)="closeMobileNav()"
-          aria-hidden="true"
-        ></div>
-
-        <!-- ==============================================
-             ÁREA PRINCIPAL COM HEADER & ROUTER OUTLET
-             ============================================== -->
-        <div class="dash-main-area">
-          <!-- CABEÇALHO SUPERIOR (Conforme Imagem 02 de Referência) -->
-          <header class="dash-header">
-            <div class="header-left">
-              <!-- Botão Menu Mobile -->
-              <button class="mobile-menu-btn" (click)="openMobileNav()" aria-label="Abrir menu lateral">
-                <app-icon name="menu" [size]="22"></app-icon>
+            <!--
+              Notificações: sem fonte definida nos docs. Sugestão: GET /api/v1/notifications
+              (ou SSE) derivado de audit_events e eventos operacionais. Não exibir itens
+              até o endpoint existir.
+            -->
+            <div class="header-dropdown-wrap">
+              <button
+                class="header-action-btn"
+                (click)="toggleNotifications()"
+                aria-label="Notificações"
+                [attr.aria-expanded]="showNotifications()"
+              >
+                <app-icon name="bell" [size]="18"></app-icon>
               </button>
 
-              <!-- Barra de Pesquisa Global com Glassmorphism -->
-              <div class="header-search">
-                <app-icon name="search" [size]="16" color="#71717A"></app-icon>
-                <input
-                  type="text"
-                  placeholder="Pesquisar agentes, chamadas, ferramentas..."
-                  [value]="state.searchQuery()"
-                  (input)="onSearchInput($event)"
-                  class="search-input"
-                  aria-label="Pesquisar em todo o painel"
-                />
-                <span class="search-shortcut">⌘K</span>
-              </div>
+              @if (showNotifications()) {
+                <div class="dropdown notifications-dropdown">
+                  <div class="dropdown-header">
+                    <h4>Notificações</h4>
+                  </div>
+                  <div class="notif-empty">
+                    <app-icon name="bell" [size]="20"></app-icon>
+                    <p>Nenhuma notificação</p>
+                    <span>O feed depende de um endpoint de notificações/eventos ainda não definido na API.</span>
+                  </div>
+                </div>
+              }
             </div>
 
-            <div class="header-right">
-              <!-- Pill de Data / Status Operacional -->
-              <div class="date-pill hide-mobile">
-                <app-icon name="calendar" [size]="15" color="#A855F7"></app-icon>
-                <span>Novembro 2026</span>
-              </div>
-
-              <!-- Notificações com Dropdown -->
-              <div class="header-dropdown-wrap">
-                <button
-                  class="header-action-btn"
-                  (click)="toggleNotifications()"
-                  aria-label="Notificações operacionais"
-                  [attr.aria-expanded]="showNotifications()"
-                >
-                  <app-icon name="bell" [size]="18"></app-icon>
-                  <span class="notification-dot" aria-label="3 novas notificações"></span>
-                </button>
-
-                <!-- Dropdown de Notificações -->
-                <div class="notifications-dropdown dash-glass-card" *ngIf="showNotifications()">
-                  <div class="notif-header">
-                    <h4>Notificações Operacionais</h4>
-                    <span class="notif-count">3 novas</span>
-                  </div>
-                  <div class="notif-list">
-                    <div class="notif-item">
-                      <div class="notif-icon-pill green">
-                        <app-icon name="check-circle" [size]="14"></app-icon>
-                      </div>
-                      <div class="notif-content">
-                        <p class="notif-title">Agente Helena publicado com sucesso</p>
-                        <span class="notif-time">Há 15 minutos • Versão v2.0</span>
-                      </div>
-                    </div>
-                    <div class="notif-item">
-                      <div class="notif-icon-pill purple">
-                        <app-icon name="phone-incoming" [size]="14"></app-icon>
-                      </div>
-                      <div class="notif-content">
-                        <p class="notif-title">Pico de 8 chamadas concorrentes</p>
-                        <span class="notif-time">Há 42 minutos • Tronco SIP estável</span>
-                      </div>
-                    </div>
-                    <div class="notif-item">
-                      <div class="notif-icon-pill amber">
-                        <app-icon name="alert-circle" [size]="14"></app-icon>
-                      </div>
-                      <div class="notif-content">
-                        <p class="notif-title">Conexão ERP requer validação de token</p>
-                        <span class="notif-time">Há 2 horas • Modo Rascunho</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Perfil do Usuário com Role Badge -->
-              <div class="header-user-card" (click)="toggleUserMenu()">
-                <img
-                  [src]="state.currentUser().avatarUrl"
-                  [alt]="state.currentUser().name"
-                  class="user-avatar"
-                />
-                <div class="user-meta hide-mobile">
-                  <span class="user-name">{{ state.currentUser().name }}</span>
-                  <span class="user-role-badge">{{ state.currentUser().role }}</span>
-                </div>
+            <!-- Usuário — GET /api/v1/me -->
+            <div class="header-dropdown-wrap">
+              <button type="button" class="header-user-card" (click)="toggleUserMenu()" [attr.aria-expanded]="showUserMenu()">
+                <span class="user-avatar" [class.pending]="!session.me.isReady()">
+                  @if (session.initials(); as initials) {
+                    {{ initials }}
+                  } @else {
+                    <app-icon name="user" [size]="16"></app-icon>
+                  }
+                </span>
+                <span class="user-meta hide-mobile">
+                  @if (session.me.data(); as me) {
+                    <span class="user-name">{{ me.name }}</span>
+                    <span class="user-role-badge">{{ me.role }}</span>
+                  } @else {
+                    <span class="user-name">Sessão</span>
+                    <span class="user-role-badge pending">não autenticada</span>
+                  }
+                </span>
                 <app-icon name="chevron-down" [size]="14" color="#71717A" class="hide-mobile"></app-icon>
+              </button>
 
-                <!-- Dropdown do Usuário -->
-                <div class="user-dropdown dash-glass-card" *ngIf="showUserMenu()">
-                  <div class="user-dropdown-header">
-                    <span class="ud-name">{{ state.currentUser().name }}</span>
-                    <span class="ud-email">{{ state.currentUser().email }}</span>
+              @if (showUserMenu()) {
+                <div class="dropdown user-dropdown">
+                  <div class="dropdown-header user-dropdown-header">
+                    @if (session.me.data(); as me) {
+                      <span class="ud-name">{{ me.name }}</span>
+                      <span class="ud-email">{{ me.email }}</span>
+                    } @else {
+                      <span class="ud-name">Usuário não carregado</span>
+                      <span class="ud-email">Implementar GET /api/v1/me (módulo identity)</span>
+                    }
                   </div>
                   <ul class="user-dropdown-nav">
                     <li>
                       <a routerLink="/dashboard/settings" (click)="showUserMenu.set(false)">
                         <app-icon name="settings" [size]="16"></app-icon>
-                        <span>Configurações do Workspace</span>
+                        <span>Configurações do workspace</span>
                       </a>
                     </li>
                     <li>
                       <a routerLink="/dashboard/audit" (click)="showUserMenu.set(false)">
                         <app-icon name="shield-check" [size]="16"></app-icon>
-                        <span>Trilha de Auditoria</span>
+                        <span>Trilha de auditoria</span>
                       </a>
                     </li>
                     <li class="divider"></li>
                     <li>
                       <a routerLink="/" (click)="showUserMenu.set(false)">
                         <app-icon name="log-out" [size]="16"></app-icon>
-                        <span>Sair para Início</span>
+                        <span>Sair para o início</span>
                       </a>
                     </li>
                   </ul>
                 </div>
-              </div>
-
-              <!-- Botão Principal de Ação Rápida (+ Novo Agente) -->
-              <a routerLink="/dashboard/agents/new" class="btn btn-primary btn-sm btn-header-cta">
-                <app-icon name="plus" [size]="16"></app-icon>
-                <span class="hide-mobile">Novo Agente</span>
-              </a>
+              }
             </div>
-          </header>
 
-          <!-- CONTEÚDO PRINCIPAL (ROUTER OUTLET) -->
-          <main id="dashboard-content" class="dash-content-container">
-            <router-outlet></router-outlet>
-          </main>
-        </div>
+            <a routerLink="/dashboard/agents/new" class="vz-btn vz-btn-primary header-cta">
+              <app-icon name="plus" [size]="16"></app-icon>
+              <span class="hide-mobile">Novo agente</span>
+            </a>
+          </div>
+        </header>
+
+        <main id="dashboard-content" class="dash-content-container">
+          <router-outlet></router-outlet>
+        </main>
       </div>
     </div>
   `,
@@ -290,252 +269,93 @@ interface NavGroup {
       min-height: 100vh;
       background-color: var(--bg-primary);
       color: var(--text-primary);
-      position: relative;
     }
 
     .dash-shell {
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow-x: hidden;
-      background: radial-gradient(circle at 15% 10%, rgba(109, 0, 255, 0.08) 0%, transparent 45%),
-                  radial-gradient(circle at 85% 80%, rgba(139, 61, 255, 0.06) 0%, transparent 50%),
-                  var(--bg-primary);
+      background:
+        radial-gradient(900px 500px at 20% -10%, rgba(109, 0, 255, 0.10), transparent 60%),
+        var(--bg-primary);
     }
 
-    /* Brilhos de fundo */
-    .shell-glow-1 {
-      top: -150px;
-      left: 10%;
-      width: 500px;
-      height: 500px;
-    }
-
-    .shell-glow-2 {
-      bottom: 10%;
-      right: 5%;
-      width: 600px;
-      height: 600px;
-    }
-
-    /* Banner Superior Demonstrativo */
-    .demo-banner {
-      background: linear-gradient(90deg, rgba(109, 0, 255, 0.22) 0%, rgba(18, 16, 26, 0.95) 50%, rgba(109, 0, 255, 0.22) 100%);
-      border-bottom: 1px solid rgba(168, 85, 247, 0.25);
-      padding: 8px 24px;
-      font-size: 13px;
-      z-index: 50;
-      backdrop-filter: blur(12px);
-    }
-
-    .demo-banner-inner {
-      max-width: 1600px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .demo-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 10px;
-      border-radius: 9999px;
-      background: rgba(109, 0, 255, 0.25);
-      border: 1px solid rgba(168, 85, 247, 0.4);
-      color: #E9D5FF;
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
-    }
-
-    .demo-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #A855F7;
-      box-shadow: 0 0 8px #A855F7;
-      animation: pulseGlow 2s infinite;
-    }
-
-    .demo-text {
-      color: var(--text-secondary);
-      flex: 1;
-      font-size: 12.5px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .demo-home-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: #C084FC;
-      font-weight: 500;
-      font-size: 12px;
-      transition: color var(--transition-fast);
-      white-space: nowrap;
-    }
-
-    .demo-home-link:hover {
-      color: #FFFFFF;
-      text-decoration: underline;
-    }
-
-    /* Estrutura Principal */
-    .dash-body {
-      display: flex;
-      flex: 1;
-      min-height: calc(100vh - 42px);
-      position: relative;
-    }
-
-    /* =================================================
-       SIDEBAR
-       ================================================= */
+    /* ================= SIDEBAR ================= */
     .dash-sidebar {
-      width: 270px;
-      background: rgba(11, 11, 15, 0.88);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-right: 1px solid rgba(168, 85, 247, 0.15);
+      width: 256px;
+      flex-shrink: 0;
+      background: #09080D;
+      border-right: 1px solid var(--vz-border);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: 8px;
       transition: width var(--transition-smooth), transform var(--transition-smooth);
       z-index: 40;
       position: sticky;
       top: 0;
       height: 100vh;
       overflow-y: auto;
+      overflow-x: hidden;
     }
+    .dash-sidebar.collapsed { width: 76px; }
 
-    .dash-sidebar.collapsed {
-      width: 80px;
-    }
-
+    /* Altura igual à do header (68px) para a logo alinhar com a barra superior. */
     .sidebar-header {
-      padding: 24px 20px 16px;
+      height: 68px;
+      flex-shrink: 0;
+      padding: 0 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      border-bottom: 1px solid var(--vz-border);
+    }
+    .collapsed .sidebar-header { padding: 0; justify-content: center; }
+
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+    .brand-logo { height: 26px; width: auto; object-fit: contain; }
+    .brand-symbol { height: 22px; width: auto; object-fit: contain; }
+
+    .brand-chip {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #C084FC;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: var(--vz-accent-soft);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      line-height: 1.4;
     }
 
-    .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .mobile-close-btn { display: none; color: var(--text-muted); padding: 6px; }
 
-    .brand-logo-pill {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, rgba(109, 0, 255, 0.3) 0%, rgba(139, 61, 255, 0.1) 100%);
-      border: 1px solid rgba(168, 85, 247, 0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 15px rgba(109, 0, 255, 0.25);
-    }
-
-    .brand-logo-img {
-      width: 24px;
-      height: 24px;
-      object-fit: contain;
-    }
-
-    .brand-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .brand-name {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #FFFFFF;
-      line-height: 1.1;
-    }
-
-    .brand-ai {
-      color: var(--light-purple);
-      font-weight: 800;
-      text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
-    }
-
-    .brand-tag {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 500;
-      letter-spacing: 0.02em;
-    }
-
-    .mobile-close-btn {
-      display: none;
-      color: var(--text-muted);
-      padding: 6px;
-    }
-
-    /* Pílula de Workspace */
     .workspace-pill {
-      margin: 4px 16px 18px;
+      margin: 8px 14px 4px;
       padding: 10px 12px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: var(--vz-surface);
+      border: 1px solid var(--vz-border);
       display: flex;
       align-items: center;
       gap: 10px;
     }
-
     .workspace-icon {
       width: 30px;
       height: 30px;
       border-radius: 8px;
-      background: rgba(109, 0, 255, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: var(--vz-accent-soft);
+      display: grid;
+      place-items: center;
       flex-shrink: 0;
     }
+    .workspace-details { display: flex; flex-direction: column; min-width: 0; line-height: 1.35; }
+    .ws-name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ws-plan { font-size: 11.5px; color: var(--light-purple); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ws-pending { color: var(--text-muted); }
 
-    .workspace-details {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .ws-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: #FFFFFF;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .ws-plan {
-      font-size: 11px;
-      color: var(--light-purple);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Navegação */
-    .sidebar-nav {
-      flex: 1;
-      padding: 0 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    .sidebar-nav { flex: 1; padding: 6px 12px; display: flex; flex-direction: column; gap: 18px; }
+    .collapsed .sidebar-nav { padding: 6px 14px; }
 
     .group-title {
       display: block;
@@ -544,438 +364,219 @@ interface NavGroup {
       letter-spacing: 0.08em;
       font-weight: 700;
       color: var(--text-dim);
-      padding: 0 12px 6px;
+      padding: 0 10px 6px;
     }
 
-    .nav-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
 
     .nav-link {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 14px;
-      border-radius: 12px;
+      padding: 9px 10px;
+      border-radius: 10px;
       color: var(--text-secondary);
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 500;
-      transition: all var(--transition-fast);
-      position: relative;
+      transition: background var(--transition-fast), color var(--transition-fast);
+      border: 1px solid transparent;
     }
-
-    .nav-link:hover {
-      color: #FFFFFF;
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    /* Estado Ativo conforme Imagem 02 */
+    .collapsed .nav-link { justify-content: center; padding: 10px 0; }
+    .nav-link:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.04); }
     .nav-link.active {
-      background: linear-gradient(135deg, rgba(109, 0, 255, 0.9) 0%, rgba(139, 61, 255, 0.85) 100%);
+      background: var(--vz-accent);
       color: #FFFFFF;
       font-weight: 600;
-      box-shadow: 0 4px 20px rgba(109, 0, 255, 0.45);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 6px 18px -6px rgba(139, 92, 246, 0.7);
     }
 
-    .nav-icon-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 20px;
-      flex-shrink: 0;
-    }
+    .nav-icon-wrapper { display: grid; place-items: center; width: 20px; flex-shrink: 0; }
+    .nav-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .nav-label {
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .nav-item-badge {
-      font-size: 11px;
-      padding: 2px 7px;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.15);
-      color: #FFFFFF;
-      font-weight: 600;
-    }
-
-    /* Rodapé da Sidebar */
     .sidebar-footer {
-      padding: 16px 12px 24px;
+      padding: 12px 12px 18px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      gap: 8px;
+      border-top: 1px solid var(--vz-border);
     }
 
-    .support-card {
-      padding: 12px;
-      border-radius: 14px;
-      background: rgba(109, 0, 255, 0.08);
-      border: 1px solid rgba(168, 85, 247, 0.2);
+    .api-card {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--vz-surface);
+      border: 1px solid var(--vz-border);
     }
-
-    .support-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: rgba(109, 0, 255, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .support-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .support-title {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: #FFFFFF;
-    }
-
-    .support-desc {
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
+    .api-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; background: #71717A; }
+    .api-card[data-state='online'] .api-dot { background: #4ADE80; box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.18); }
+    .api-card[data-state='offline'] .api-dot { background: #F87171; box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.18); }
+    .api-info { display: flex; flex-direction: column; min-width: 0; line-height: 1.4; }
+    .api-title { font-size: 12.5px; font-weight: 600; color: #FFFFFF; }
+    .api-desc { font-size: 11.5px; color: var(--text-muted); }
 
     .collapse-toggle-btn {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
+      padding: 8px 10px;
       border-radius: 10px;
       color: var(--text-muted);
-      font-size: 13px;
-      transition: all var(--transition-fast);
+      font-size: 12.5px;
       width: 100%;
+      transition: all var(--transition-fast);
     }
+    .collapsed .collapse-toggle-btn { justify-content: center; }
+    .collapse-toggle-btn:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.04); }
+    .collapse-icon { display: grid; place-items: center; transition: transform var(--transition-base); }
+    .collapse-icon.flipped { transform: rotate(180deg); }
 
-    .collapse-toggle-btn:hover {
-      color: #FFFFFF;
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    /* =================================================
-       ÁREA PRINCIPAL & CABEÇALHO SUPERIOR
-       ================================================= */
-    .dash-main-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      background: transparent;
-    }
+    /* ================= ÁREA PRINCIPAL ================= */
+    .dash-main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
     .dash-header {
-      height: 72px;
-      padding: 0 32px;
-      background: rgba(11, 11, 15, 0.65);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(168, 85, 247, 0.12);
+      height: 68px;
+      padding: 0 28px;
+      background: rgba(5, 5, 5, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--vz-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
       position: sticky;
       top: 0;
       z-index: 30;
     }
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex: 1;
-      max-width: 480px;
-    }
+    .header-left { display: flex; align-items: center; gap: 12px; flex: 1; max-width: 460px; min-width: 0; }
 
-    .mobile-menu-btn {
-      display: none;
-      color: var(--text-secondary);
-      padding: 6px;
-    }
+    .mobile-menu-btn { display: none; color: var(--text-secondary); padding: 6px; }
 
     .header-search {
       display: flex;
       align-items: center;
       gap: 10px;
       width: 100%;
-      background: rgba(21, 21, 27, 0.7);
-      border: 1px solid rgba(168, 85, 247, 0.18);
-      border-radius: 12px;
-      padding: 8px 14px;
-      transition: all var(--transition-fast);
+      min-width: 0;
+      background: var(--vz-surface);
+      border: 1px solid var(--vz-border);
+      border-radius: 11px;
+      padding: 8px 12px;
+      cursor: not-allowed;
     }
-
-    .header-search:focus-within {
-      border-color: var(--light-purple);
-      box-shadow: 0 0 16px rgba(109, 0, 255, 0.25);
-    }
-
     .search-input {
       background: transparent;
       border: none;
       color: #FFFFFF;
-      font-size: 13.5px;
+      font-size: 13px;
       width: 100%;
+      min-width: 0;
       outline: none;
+      cursor: not-allowed;
     }
-
-    .search-input::placeholder {
-      color: var(--text-muted);
-    }
-
+    .search-input::placeholder { color: var(--text-muted); }
     .search-shortcut {
-      font-size: 11px;
-      padding: 2px 6px;
+      font-size: 10.5px;
+      padding: 2px 7px;
       border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--vz-border);
       color: var(--text-muted);
-      font-family: var(--font-mono);
+      white-space: nowrap;
     }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      position: relative;
-    }
+    .header-right { display: flex; align-items: center; gap: 10px; }
 
     .date-pill {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 7px 14px;
+      padding: 8px 12px;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      font-size: 13px;
+      background: var(--vz-surface);
+      border: 1px solid var(--vz-border);
+      font-size: 12.5px;
       color: var(--text-secondary);
+      white-space: nowrap;
     }
 
     .header-action-btn {
       width: 38px;
       height: 38px;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: var(--vz-surface);
+      border: 1px solid var(--vz-border);
+      display: grid;
+      place-items: center;
       color: var(--text-secondary);
-      position: relative;
       transition: all var(--transition-fast);
     }
+    .header-action-btn:hover { border-color: var(--vz-border-strong); color: #FFFFFF; }
 
-    .header-action-btn:hover {
-      background: rgba(109, 0, 255, 0.2);
-      border-color: rgba(168, 85, 247, 0.4);
-      color: #FFFFFF;
-    }
+    .header-dropdown-wrap { position: relative; }
 
-    .notification-dot {
+    .dropdown {
       position: absolute;
-      top: 9px;
-      right: 9px;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #A855F7;
-      box-shadow: 0 0 8px #A855F7;
-    }
-
-    /* Dropdown de Notificações */
-    .notifications-dropdown {
-      position: absolute;
-      top: 50px;
-      right: 140px;
-      width: 340px;
-      padding: 16px;
+      top: calc(100% + 8px);
+      right: 0;
       z-index: 100;
+      background: #131218;
+      border: 1px solid var(--vz-border);
+      border-radius: 14px;
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.8);
+      padding: 12px;
     }
+    .notifications-dropdown { width: 320px; }
+    .dropdown-header { padding: 4px 6px 10px; border-bottom: 1px solid var(--vz-border); }
+    .dropdown-header h4 { font-size: 14px; font-weight: 600; }
 
-    .notif-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
+    .notif-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px 12px 8px; text-align: center; color: var(--text-muted); }
+    .notif-empty p { font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-top: 6px; }
+    .notif-empty span { font-size: 12px; line-height: 1.5; }
 
-    .notif-header h4 {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .notif-count {
-      font-size: 11px;
-      color: var(--light-purple);
-      background: rgba(109, 0, 255, 0.2);
-      padding: 2px 8px;
-      border-radius: 9999px;
-    }
-
-    .notif-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .notif-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 8px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.02);
-      transition: background var(--transition-fast);
-    }
-
-    .notif-item:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .notif-icon-pill {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .notif-icon-pill.green {
-      background: rgba(34, 197, 94, 0.2);
-      color: #4ADE80;
-    }
-
-    .notif-icon-pill.purple {
-      background: rgba(109, 0, 255, 0.2);
-      color: #C084FC;
-    }
-
-    .notif-icon-pill.amber {
-      background: rgba(245, 158, 11, 0.2);
-      color: #FBBF24;
-    }
-
-    .notif-content {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .notif-title {
-      font-size: 12.5px;
-      color: #FFFFFF;
-      font-weight: 500;
-      line-height: 1.3;
-    }
-
-    .notif-time {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    /* Cartão do Usuário */
     .header-user-card {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 4px 8px 4px 4px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      cursor: pointer;
-      position: relative;
-      transition: all var(--transition-fast);
+      padding: 4px 10px 4px 4px;
+      border-radius: 11px;
+      background: var(--vz-surface);
+      border: 1px solid var(--vz-border);
+      transition: border-color var(--transition-fast);
+      text-align: left;
     }
-
-    .header-user-card:hover {
-      border-color: rgba(168, 85, 247, 0.4);
-      background: rgba(109, 0, 255, 0.1);
-    }
+    .header-user-card:hover { border-color: var(--vz-border-strong); }
 
     .user-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
-      object-fit: cover;
-      border: 1px solid rgba(168, 85, 247, 0.5);
-    }
-
-    .user-meta {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .user-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: #FFFFFF;
-      line-height: 1.1;
-    }
-
-    .user-role-badge {
-      font-size: 10px;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
       font-weight: 700;
-      color: var(--light-purple);
-      letter-spacing: 0.03em;
-    }
-
-    /* Dropdown do Usuário */
-    .user-dropdown {
-      position: absolute;
-      top: 48px;
-      right: 0;
-      width: 240px;
-      padding: 12px;
-      z-index: 100;
-    }
-
-    .user-dropdown-header {
-      padding: 6px 8px 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .ud-name {
-      font-size: 13.5px;
-      font-weight: 600;
       color: #FFFFFF;
+      background: linear-gradient(135deg, #7C3AED, #A855F7);
+      flex-shrink: 0;
     }
+    .user-avatar.pending { background: var(--vz-surface-2); color: var(--text-muted); border: 1px dashed rgba(255, 255, 255, 0.15); }
 
-    .ud-email {
-      font-size: 11.5px;
-      color: var(--text-muted);
-    }
+    .user-meta { display: flex; flex-direction: column; line-height: 1.25; }
+    .user-name { font-size: 12.5px; font-weight: 600; color: #FFFFFF; white-space: nowrap; }
+    .user-role-badge { font-size: 10.5px; font-weight: 700; color: var(--light-purple); letter-spacing: 0.03em; }
+    .user-role-badge.pending { color: var(--text-muted); font-weight: 500; letter-spacing: 0; }
 
-    .user-dropdown-nav {
-      list-style: none;
-      padding: 8px 0 0;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+    .user-dropdown { width: 260px; }
+    .user-dropdown-header { display: flex; flex-direction: column; }
+    .ud-name { font-size: 13.5px; font-weight: 600; color: #FFFFFF; }
+    .ud-email { font-size: 11.5px; color: var(--text-muted); }
 
+    .user-dropdown-nav { list-style: none; padding-top: 8px; display: flex; flex-direction: column; gap: 2px; }
     .user-dropdown-nav a {
       display: flex;
       align-items: center;
@@ -986,137 +587,111 @@ interface NavGroup {
       color: var(--text-secondary);
       transition: all var(--transition-fast);
     }
+    .user-dropdown-nav a:hover { background: var(--vz-accent-soft); color: #FFFFFF; }
+    .user-dropdown-nav .divider { height: 1px; background: var(--vz-border); margin: 4px 0; }
 
-    .user-dropdown-nav a:hover {
-      background: rgba(109, 0, 255, 0.18);
-      color: #FFFFFF;
-    }
+    .header-cta { padding: 9px 14px; font-size: 13px; }
 
-    .user-dropdown-nav .divider {
-      height: 1px;
-      background: rgba(255, 255, 255, 0.06);
-      margin: 4px 0;
-    }
-
-    .btn-header-cta {
-      box-shadow: 0 4px 18px rgba(109, 0, 255, 0.45);
-    }
-
-    /* Conteúdo Principal */
     .dash-content-container {
-      padding: 28px 32px 48px;
+      padding: 28px 28px 48px;
       flex: 1;
       width: 100%;
-      max-width: 1600px;
+      max-width: 1680px;
       margin: 0 auto;
     }
 
-    /* =================================================
-       RESPONSIVIDADE (Tablets e Mobile)
-       ================================================= */
+    /* ================= RESPONSIVO ================= */
     @media (max-width: 1024px) {
       .dash-sidebar {
         position: fixed;
         left: 0;
         top: 0;
         bottom: 0;
+        width: 256px;
         transform: translateX(-100%);
         box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
       }
-
-      .dash-sidebar.mobile-open {
-        transform: translateX(0);
-      }
-
-      .mobile-close-btn {
-        display: block;
-      }
-
-      .sidebar-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(4px);
-        z-index: 35;
-      }
-
-      .mobile-menu-btn {
-        display: block;
-      }
-
-      .collapse-toggle-btn {
-        display: none;
-      }
-
-      .dash-header {
-        padding: 0 20px;
-      }
-
-      .dash-content-container {
-        padding: 20px 20px 40px;
-      }
+      .dash-sidebar.collapsed { width: 256px; }
+      .dash-sidebar.mobile-open { transform: translateX(0); }
+      .mobile-close-btn { display: block; }
+      .sidebar-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(3px); z-index: 35; }
+      .mobile-menu-btn { display: block; }
+      .collapse-toggle-btn { display: none; }
+      .dash-header { padding: 0 16px; }
+      .dash-content-container { padding: 20px 16px 40px; }
     }
 
     @media (max-width: 768px) {
-      .hide-mobile {
-        display: none !important;
-      }
-
-      .demo-text {
-        display: none;
-      }
-
-      .demo-banner-inner {
-        justify-content: space-between;
-      }
-
-      .header-search {
-        max-width: 200px;
-      }
-
-      .dash-header {
-        height: 64px;
-      }
+      .hide-mobile { display: none !important; }
+      .header-user-card { padding: 4px; }
+      .dash-header { height: 60px; }
+      .search-shortcut { display: none; }
     }
   `]
 })
 export class DashboardLayoutComponent {
-  isCollapsed = signal<boolean>(false);
-  mobileNavOpen = signal<boolean>(false);
-  showNotifications = signal<boolean>(false);
-  showUserMenu = signal<boolean>(false);
+  readonly session = inject(SessionStore);
+
+  readonly isCollapsed = signal(false);
+  readonly mobileNavOpen = signal(false);
+  readonly showNotifications = signal(false);
+  readonly showUserMenu = signal(false);
+
+  readonly todayLabel = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .format(new Date())
+    .replace('.', '');
+
+  readonly tenantStatusLabel: Record<TenantStatus, string> = {
+    ACTIVE: 'Workspace ativo',
+    ONBOARDING: 'Em configuração',
+    SUSPENDED: 'Suspenso'
+  };
 
   readonly navGroups: NavGroup[] = [
     {
-      groupName: 'Visão Geral',
-      items: [
-        { label: 'Visão Geral', path: '/dashboard', icon: 'layout-dashboard' }
-      ]
+      groupName: 'Geral',
+      items: [{ label: 'Visão geral', path: '/dashboard', icon: 'layout-dashboard' }]
     },
     {
       groupName: 'Operação',
       items: [
         { label: 'Agentes de IA', path: '/dashboard/agents', icon: 'bot' },
-        { label: 'Conversas & Chamadas', path: '/dashboard/conversations', icon: 'phone-call', badge: 'Ao vivo' },
-        { label: 'Base de Conhecimento', path: '/dashboard/knowledge', icon: 'book-open' },
-        { label: 'Ferramentas & Conectores', path: '/dashboard/integrations', icon: 'cpu' },
-        { label: 'Telefonia & Linhas', path: '/dashboard/telephony', icon: 'phone' }
+        { label: 'Conversas e chamadas', path: '/dashboard/conversations', icon: 'phone-call' },
+        { label: 'Base de conhecimento', path: '/dashboard/knowledge', icon: 'book-open' },
+        { label: 'Ferramentas e conectores', path: '/dashboard/integrations', icon: 'cpu' },
+        { label: 'Telefonia e linhas', path: '/dashboard/telephony', icon: 'phone' }
       ]
     },
     {
       groupName: 'Gestão',
       items: [
-        { label: 'Utilização & Consumo', path: '/dashboard/usage', icon: 'bar-chart-2' },
-        { label: 'Trilha de Auditoria', path: '/dashboard/audit', icon: 'shield-check' },
-        { label: 'Configurações Workspace', path: '/dashboard/settings', icon: 'settings' }
+        { label: 'Utilização e consumo', path: '/dashboard/usage', icon: 'bar-chart-2' },
+        { label: 'Trilha de auditoria', path: '/dashboard/audit', icon: 'shield-check' },
+        { label: 'Configurações', path: '/dashboard/settings', icon: 'settings' }
       ]
     }
   ];
 
-  constructor(public state: DashboardStateService, private router: Router) {}
+  apiState(): 'online' | 'offline' | 'checking' {
+    const status = this.session.health.status();
+    if (status === 'loading') return 'checking';
+    return this.session.apiOnline() ? 'online' : 'offline';
+  }
+
+  apiLabel(): string {
+    return { online: 'conectada', offline: 'offline', checking: 'verificando…' }[this.apiState()];
+  }
+
+  apiDescription(): string {
+    return {
+      online: 'Spring Boot respondendo /actuator/health',
+      offline: 'Inicie o backend em localhost:8080',
+      checking: 'Consultando /actuator/health'
+    }[this.apiState()];
+  }
 
   toggleCollapse(): void {
-    this.isCollapsed.set(!this.isCollapsed());
+    this.isCollapsed.update(v => !v);
   }
 
   openMobileNav(): void {
@@ -1128,28 +703,19 @@ export class DashboardLayoutComponent {
   }
 
   toggleNotifications(): void {
-    this.showNotifications.set(!this.showNotifications());
-    if (this.showNotifications()) {
-      this.showUserMenu.set(false);
-    }
+    this.showNotifications.update(v => !v);
+    if (this.showNotifications()) this.showUserMenu.set(false);
   }
 
   toggleUserMenu(): void {
-    this.showUserMenu.set(!this.showUserMenu());
-    if (this.showUserMenu()) {
-      this.showNotifications.set(false);
-    }
-  }
-
-  onSearchInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.state.searchQuery.set(value);
+    this.showUserMenu.update(v => !v);
+    if (this.showUserMenu()) this.showNotifications.set(false);
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (!target.closest('.header-dropdown-wrap') && !target.closest('.header-user-card')) {
+    if (!target.closest('.header-dropdown-wrap')) {
       this.showNotifications.set(false);
       this.showUserMenu.set(false);
     }

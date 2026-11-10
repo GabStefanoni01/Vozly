@@ -1,0 +1,37 @@
+# Render Blueprint — ambiente de DESENVOLVIMENTO do frontend Vozly.
+# URL pública: https://devvozly.onrender.com (o prefixo "dev" identifica o ambiente).
+# Branch publicada: deploy/dev-dashboard (auto-deploy a cada push).
+#
+# Ainda não há backend hospedado: chamadas para /api e /actuator caem no rewrite
+# de SPA e o painel mostra os cards "Backend indisponível" com as instruções.
+# Quando a API Spring Boot estiver no Render, adicionar antes do rewrite:
+#   - type: rewrite
+#     source: /api/*
+#     destination: https://<api-dev>.onrender.com/api/*
+services:
+  - type: web
+    runtime: static
+    name: devvozly
+    branch: deploy/dev-dashboard
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist/frontend/browser
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: NODE_VERSION
+        value: 22.13.1
+    headers:
+      - path: /*
+        name: X-Robots-Tag
+        value: noindex, nofollow
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    routes:
+      # Angular usa rotas no cliente (/dashboard, /login…): sempre servir o index.html.
+      - type: rewrite
+        source: /*
+        destination: /index.html

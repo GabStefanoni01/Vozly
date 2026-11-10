@@ -1,298 +1,380 @@
-import { Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { DashboardStatCardComponent } from '../../../components/dashboard/dashboard-stat-card/dashboard-stat-card.component';
-import { DashboardActivityChartComponent } from '../../../components/dashboard/dashboard-activity-chart/dashboard-activity-chart.component';
-import { DashboardRecentCallsComponent } from '../../../components/dashboard/dashboard-recent-calls/dashboard-recent-calls.component';
-import { DashboardTelephonyMapComponent } from '../../../components/dashboard/dashboard-telephony-map/dashboard-telephony-map.component';
-import { DashboardPerformanceDonutComponent } from '../../../components/dashboard/dashboard-performance-donut/dashboard-performance-donut.component';
-import { DashboardSystemStatusComponent } from '../../../components/dashboard/dashboard-system-status/dashboard-system-status.component';
-import { DashboardQuickActionsComponent } from '../../../components/dashboard/dashboard-quick-actions/dashboard-quick-actions.component';
-import { VoiceTestModalComponent } from '../../../components/dashboard/voice-test-modal/voice-test-modal.component';
-import { CallDetailsModalComponent } from '../../../components/dashboard/call-details-modal/call-details-modal.component';
-import { DashboardStateService } from '../../../services/dashboard-state.service';
-import { Agent, Call } from '../../../models/dashboard.models';
+import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { IconComponent } from '../../../components/ui/icon/icon.component';
+import { KpiCardComponent } from '../../../components/dashboard/overview/kpi-card.component';
+import { ActivityChartComponent } from '../../../components/dashboard/overview/activity-chart.component';
+import { EndReasonsComponent } from '../../../components/dashboard/overview/end-reasons.component';
+import { RecentCallsTableComponent } from '../../../components/dashboard/overview/recent-calls-table.component';
+import { AgentsSummaryComponent } from '../../../components/dashboard/overview/agents-summary.component';
+import { ActivationChecklistComponent } from '../../../components/dashboard/overview/activation-checklist.component';
+import { SystemHealthComponent } from '../../../components/dashboard/overview/system-health.component';
+import { PhoneNumbersSummaryComponent } from '../../../components/dashboard/overview/phone-numbers-summary.component';
+import { DashboardApiService, DashboardRange } from '../../../core/api/dashboard-api.service';
+import { SessionStore } from '../../../core/api/session.store';
+import { remoteResource } from '../../../core/api/remote-resource';
+import { fmtDuration, fmtNumber, fmtPercent, percentDelta } from '../../../components/dashboard/overview/overview-format';
 
+const RANGE_LABEL: Record<DashboardRange, string> = {
+  today: 'Hoje',
+  '7d': 'Últimos 7 dias',
+  '30d': 'Últimos 30 dias'
+};
+
+/**
+ * VISÃO GERAL DO PAINEL
+ *
+ * Todos os números vêm da API administrativa; não há dados fictícios.
+ * Mapa de dependências (detalhes em core/api/backend-contracts.ts):
+ *
+ * | Bloco                         | Endpoint                         | Backend         |
+ * |-------------------------------|----------------------------------|-----------------|
+ * | Saudação / workspace          | GET /me, GET /tenants/current    | ⏳ pendente     |
+ * | KPIs, gráfico, resultados     | GET /usage/summary               | ⏳ pendente     |
+ * | Chamadas recentes             | GET /calls                       | ⏳ pendente     |
+ * | Agentes                       | GET /agents                      | ⏳ pendente     |
+ * | Ativação                      | GET /onboarding                  | ⏳ pendente     |
+ * | Números                       | GET /phone-numbers               | ⏳ pendente     |
+ * | Saúde da plataforma           | GET /actuator/health             | ✅ disponível   |
+ */
 @Component({
   selector: 'app-overview',
   standalone: true,
   imports: [
-    CommonModule,
-    DashboardStatCardComponent,
-    DashboardActivityChartComponent,
-    DashboardRecentCallsComponent,
-    DashboardTelephonyMapComponent,
-    DashboardPerformanceDonutComponent,
-    DashboardSystemStatusComponent,
-    DashboardQuickActionsComponent,
-    VoiceTestModalComponent,
-    CallDetailsModalComponent
+    RouterLink,
+    IconComponent,
+    KpiCardComponent,
+    ActivityChartComponent,
+    EndReasonsComponent,
+    RecentCallsTableComponent,
+    AgentsSummaryComponent,
+    ActivationChecklistComponent,
+    SystemHealthComponent,
+    PhoneNumbersSummaryComponent
   ],
   template: `
-    <div class="overview-shell">
-      <!-- 5.1. SAUDAÇÃO E CONTEXTO (Conforme Imagem 02 de Referência) -->
-      <section class="overview-hero">
-        <div class="hero-left">
-          <h1 class="hero-greeting">
-            Bom dia, {{ state.currentUser().name.split(' ')[0] }} <span class="wave-hand">👋</span>
-          </h1>
-          <p class="hero-subtitle">
-            Aqui está o status operacional da sua central de voz inteligente hoje.
+    <div class="page">
+      <!-- Cabeçalho da página -->
+      <header class="page-head">
+        <div class="page-title-block">
+          <h1 class="page-title">{{ greeting() }}</h1>
+          <p class="page-sub">
+            {{ session.tenant.data()?.name ?? 'Visão geral da operação de voz' }}
+            <span class="dot-sep">•</span>
+            {{ todayLabel }}
           </p>
         </div>
 
-        <div class="hero-right">
-          <!-- Pílula de Workspace Ativo e Status de IA -->
-          <div class="hero-status-pill">
-            <span class="hero-live-dot"></span>
-            <span class="hero-status-text">Central de Voz Conectada</span>
-            <span class="hero-agent-active">Agente Helena Ativo (v2.0)</span>
+        <div class="page-actions">
+          <div class="vz-seg" role="tablist" aria-label="Período">
+            @for (r of ranges; track r) {
+              <button type="button" role="tab" [class.active]="range() === r" [attr.aria-selected]="range() === r" (click)="setRange(r)">
+                {{ rangeLabel[r] }}
+              </button>
+            }
+          </div>
+          <button type="button" class="vz-btn" (click)="refreshAll()" title="Atualizar dados">
+            <app-icon name="refresh-cw" [size]="14"></app-icon>
+            <span class="hide-sm">Atualizar</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="layout">
+        <!-- Coluna principal -->
+        <div class="main-col">
+          <section class="kpis" aria-label="Indicadores do período">
+            <app-kpi-card
+              [featured]="true"
+              label="Chamadas no período"
+              icon="phone-call"
+              [value]="kpiTotal()"
+              [delta]="kpiTotalDelta()"
+              hint="vs. período anterior"
+              source="/usage/summary"
+              [status]="summary.status()"
+            />
+            <app-kpi-card
+              label="Em andamento agora"
+              icon="activity"
+              [value]="kpiInProgress()"
+              hint="chamadas ativas ou transferindo"
+              source="/usage/summary"
+              [status]="summary.status()"
+            />
+            <app-kpi-card
+              label="Transferidas para humano"
+              icon="phone-forwarded"
+              [value]="kpiTransferred()"
+              [hint]="kpiTransferredHint()"
+              source="/usage/summary"
+              [status]="summary.status()"
+            />
+            <app-kpi-card
+              label="Duração média"
+              icon="clock"
+              [value]="kpiAvgDuration()"
+              [hint]="kpiTotalMinutes()"
+              source="/usage/summary"
+              [status]="summary.status()"
+            />
+          </section>
+
+          <div class="row-chart">
+            <app-activity-chart
+              [series]="summary.data()?.series ?? null"
+              [status]="summary.status()"
+              [error]="summary.error()"
+              [rangeLabel]="rangeLabel[range()]"
+              (retry)="summary.reload()"
+            />
+            <app-end-reasons
+              [summary]="summary.data()"
+              [status]="summary.status()"
+              [error]="summary.error()"
+              (retry)="summary.reload()"
+            />
+          </div>
+
+          <app-recent-calls-table
+            [page]="calls.data()"
+            [status]="calls.status()"
+            [error]="calls.error()"
+            (retry)="calls.reload()"
+          />
+
+          <div class="row-split">
+            <app-agents-summary
+              [page]="agents.data()"
+              [status]="agents.status()"
+              [error]="agents.error()"
+              (retry)="agents.reload()"
+            />
+            <app-phone-numbers-summary
+              [page]="phoneNumbers.data()"
+              [status]="phoneNumbers.status()"
+              [error]="phoneNumbers.error()"
+              (retry)="phoneNumbers.reload()"
+            />
           </div>
         </div>
-      </section>
 
-      <!-- 5.2. CARDS DE INDICADORES (4 Colunas com Sparkline e Cores da Imagem 02) -->
-      <section class="metrics-grid">
-        <app-dashboard-stat-card
-          label="Total de Chamadas"
-          value="1.284"
-          trendText="+12.5% em relação ao mês anterior"
-          [isTrendPositive]="true"
-          iconName="phone"
-          iconVariant="purple"
-          [sparklineData]="[30, 45, 40, 60, 55, 75, 85, 98]"
-        ></app-dashboard-stat-card>
+        <!-- Coluna lateral -->
+        <aside class="side-col" aria-label="Status do workspace">
+          <app-activation-checklist
+            [onboarding]="onboarding.data()"
+            [status]="onboarding.status()"
+            [error]="onboarding.error()"
+            (retry)="onboarding.reload()"
+          />
 
-        <app-dashboard-stat-card
-          label="Em Andamento"
-          value="642"
-          trendText="+8.2% em relação ao mês anterior"
-          [isTrendPositive]="true"
-          iconName="phone-incoming"
-          iconVariant="purple"
-          [sparklineData]="[20, 28, 25, 38, 42, 50, 48, 62]"
-        ></app-dashboard-stat-card>
+          <section class="vz-panel quick">
+            <h2 class="vz-panel-title">Ações rápidas</h2>
+            <div class="quick-grid">
+              @for (a of quickActions; track a.label) {
+                <a [routerLink]="a.route" class="quick-item">
+                  <span class="quick-icon"><app-icon [name]="a.icon" [size]="16"></app-icon></span>
+                  <span>{{ a.label }}</span>
+                </a>
+              }
+            </div>
+          </section>
 
-        <app-dashboard-stat-card
-          label="Atendimentos Concluídos"
-          value="532"
-          trendText="+15.3% em relação ao mês anterior"
-          [isTrendPositive]="true"
-          iconName="check-circle"
-          iconVariant="purple"
-          [sparklineData]="[15, 20, 28, 35, 45, 50, 58, 66]"
-        ></app-dashboard-stat-card>
-
-        <app-dashboard-stat-card
-          label="Taxa de Resolução / SLA"
-          value="98.6"
-          unit="%"
-          trendText="+2.7% em relação ao mês anterior"
-          [isTrendPositive]="true"
-          iconName="sparkles"
-          iconVariant="purple"
-          [sparklineData]="[92, 94, 93, 96, 95, 97, 98, 98.6]"
-        ></app-dashboard-stat-card>
-      </section>
-
-      <!-- SEÇÃO PRINCIPAL 01: GRÁFICO DE ATIVIDADE & CHAMADAS RECENTES (Imagem 02) -->
-      <section class="main-split-grid row-1">
-        <div class="col-chart">
-          <app-dashboard-activity-chart></app-dashboard-activity-chart>
-        </div>
-        <div class="col-recent">
-          <app-dashboard-recent-calls
-            [calls]="state.calls()"
-            (selectCall)="onOpenCallDetails($event)"
-          ></app-dashboard-recent-calls>
-        </div>
-      </section>
-
-      <!-- SEÇÃO PRINCIPAL 02: MAPA DE CANAIS DE TELEFONIA & PERFORMANCE (Imagem 02) -->
-      <section class="main-split-grid row-2">
-        <div class="col-map">
-          <app-dashboard-telephony-map></app-dashboard-telephony-map>
-        </div>
-        <div class="col-donut">
-          <app-dashboard-performance-donut
-            [averageScore]="state.averageResolutionRate()"
-          ></app-dashboard-performance-donut>
-        </div>
-      </section>
-
-      <!-- SEÇÃO PRINCIPAL 03: STATUS DOS SISTEMAS & AÇÕES RÁPIDAS COM CUBO 3D (Imagem 02) -->
-      <section class="main-split-grid row-3">
-        <div class="col-status">
-          <app-dashboard-system-status></app-dashboard-system-status>
-        </div>
-        <div class="col-actions">
-          <app-dashboard-quick-actions
-            (openVoiceTest)="onOpenVoiceSimulator()"
-          ></app-dashboard-quick-actions>
-        </div>
-      </section>
+          <app-system-health
+            [health]="session.health.data()"
+            [status]="session.health.status()"
+            (refresh)="session.health.reload()"
+          />
+        </aside>
+      </div>
     </div>
-
-    <!-- Modais de Interação Visual Local -->
-    <app-voice-test-modal
-      [isOpen]="isVoiceModalOpen()"
-      [selectedAgent]="activeAgent()"
-      (closeEvent)="onCloseVoiceSimulator()"
-    ></app-voice-test-modal>
-
-    <app-call-details-modal
-      [isOpen]="isCallModalOpen()"
-      [call]="inspectedCall()"
-      (closeEvent)="onCloseCallDetails()"
-    ></app-call-details-modal>
   `,
   styles: [`
-    .overview-shell {
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-    }
+    :host { display: block; }
 
-    /* Saudação e Cabeçalho */
-    .overview-hero {
+    .page { display: flex; flex-direction: column; gap: 24px; }
+
+    .page-head {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: space-between;
-      flex-wrap: wrap;
       gap: 16px;
+      flex-wrap: wrap;
     }
 
-    .hero-greeting {
-      font-size: 28px;
+    .page-title {
+      font-size: 26px;
       font-weight: 700;
-      color: #FFFFFF;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.025em;
       line-height: 1.2;
     }
 
-    .wave-hand {
-      display: inline-block;
-      animation: waveHand 2.5s infinite;
-      transform-origin: 70% 70%;
-    }
-
-    @keyframes waveHand {
-      0%, 100% { transform: rotate(0deg); }
-      20% { transform: rotate(14deg); }
-      40% { transform: rotate(-10deg); }
-      60% { transform: rotate(14deg); }
-      80% { transform: rotate(-4deg); }
-    }
-
-    .hero-subtitle {
-      font-size: 14px;
-      color: var(--text-secondary);
+    .page-sub {
       margin-top: 4px;
-    }
-
-    .hero-status-pill {
+      font-size: 13.5px;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 16px;
-      border-radius: 9999px;
-      background: rgba(18, 16, 26, 0.8);
-      border: 1px solid rgba(168, 85, 247, 0.25);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      gap: 8px;
+      flex-wrap: wrap;
     }
+    .dot-sep { color: var(--text-dim); }
 
-    .hero-live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #4ADE80;
-      box-shadow: 0 0 10px #4ADE80;
-      animation: pulseGlow 2s infinite;
-    }
+    .page-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-    .hero-status-text {
-      font-size: 13px;
-      font-weight: 600;
-      color: #FFFFFF;
-    }
-
-    .hero-agent-active {
-      font-size: 11.5px;
-      color: var(--light-purple);
-      padding-left: 10px;
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    /* Grid de Métricas */
-    .metrics-grid {
+    .layout {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: minmax(0, 1fr) 340px;
       gap: 20px;
+      align-items: start;
     }
 
-    @media (max-width: 1200px) {
-      .metrics-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
+    .main-col, .side-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    .main-col { container-type: inline-size; }
 
-    @media (max-width: 640px) {
-      .metrics-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 
-    /* Grids das Linhas Principais */
-    .main-split-grid {
+    /* KPIs em 2x2 quando a coluna principal fica estreita (sidebar + coluna lateral). */
+    @container (max-width: 900px) {
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .row-split {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 20px;
+      align-items: stretch;
     }
 
-    .main-split-grid.row-1 {
-      grid-template-columns: 7fr 5fr;
+    @container (max-width: 760px) {
+      .row-chart, .row-split { grid-template-columns: minmax(0, 1fr); }
+    }
+    @container (max-width: 460px) {
+      .kpis { grid-template-columns: minmax(0, 1fr); }
     }
 
-    .main-split-grid.row-2 {
-      grid-template-columns: 6.5fr 5.5fr;
+    .row-chart {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+      gap: 20px;
+      align-items: stretch;
     }
 
-    .main-split-grid.row-3 {
-      grid-template-columns: 4fr 8fr;
+    .quick { gap: 12px; }
+    .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .quick-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--vz-surface-2);
+      border: 1px solid var(--vz-border);
+      line-height: 1.3;
+      transition: all var(--transition-fast);
+    }
+    .quick-item:hover { color: #FFFFFF; border-color: var(--vz-border-strong); background: var(--vz-accent-soft); }
+    .quick-icon { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--vz-accent-soft); color: #C084FC; flex-shrink: 0; }
+
+    @media (max-width: 1240px) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+      .side-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
     }
 
-    @media (max-width: 1080px) {
-      .main-split-grid.row-1,
-      .main-split-grid.row-2,
-      .main-split-grid.row-3 {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 720px) {
+      .side-col { grid-template-columns: minmax(0, 1fr); }
+      .page-title { font-size: 22px; }
+      .hide-sm { display: none; }
+    }
+
+    @media (max-width: 520px) {
+      .page-actions { width: 100%; justify-content: space-between; }
     }
   `]
 })
 export class OverviewComponent {
-  isVoiceModalOpen = signal<boolean>(false);
-  isCallModalOpen = signal<boolean>(false);
-  inspectedCall = signal<Call | null>(null);
+  private readonly api = inject(DashboardApiService);
+  readonly session = inject(SessionStore);
 
-  constructor(public state: DashboardStateService) {}
+  readonly ranges: DashboardRange[] = ['today', '7d', '30d'];
+  readonly rangeLabel = RANGE_LABEL;
+  readonly range = signal<DashboardRange>('7d');
 
-  activeAgent(): Agent {
-    return this.state.agents().find(a => a.status === 'ACTIVE') || this.state.agents()[0];
+  readonly todayLabel = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+    .format(new Date())
+    .replace(/^./, c => c.toUpperCase());
+
+  // Recursos remotos — cada um mostra instruções de implementação se a rota não existir.
+  readonly summary = remoteResource(() => this.api.getUsageSummary(this.range()));
+  readonly calls = remoteResource(() => this.api.listRecentCalls(6));
+  readonly agents = remoteResource(() => this.api.listAgents());
+  readonly onboarding = remoteResource(() => this.api.getOnboarding());
+  readonly phoneNumbers = remoteResource(() => this.api.listPhoneNumbers());
+
+  readonly quickActions = [
+    { label: 'Novo agente', icon: 'bot', route: '/dashboard/agents/new' },
+    { label: 'Conhecimento', icon: 'book-open', route: '/dashboard/knowledge' },
+    { label: 'Integrações', icon: 'share-2', route: '/dashboard/integrations' },
+    { label: 'Números', icon: 'phone', route: '/dashboard/telephony' }
+  ];
+
+  readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+    const salutation = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+    const name = this.session.firstName();
+    return name ? `${salutation}, ${name}` : salutation;
+  });
+
+  // ---- KPIs derivados de UsageSummaryResponse --------------------------------
+  readonly kpiTotal = computed(() => {
+    const s = this.summary.data();
+    return s ? fmtNumber(s.calls.total) : null;
+  });
+
+  readonly kpiTotalDelta = computed(() => {
+    const s = this.summary.data();
+    return s ? percentDelta(s.calls.total, s.previousCalls?.total) : null;
+  });
+
+  readonly kpiInProgress = computed(() => {
+    const s = this.summary.data();
+    return s ? fmtNumber(s.inProgress) : null;
+  });
+
+  readonly kpiTransferred = computed(() => {
+    const s = this.summary.data();
+    return s ? fmtNumber(s.calls.transferred) : null;
+  });
+
+  readonly kpiTransferredHint = computed(() => {
+    const s = this.summary.data();
+    if (!s || !s.calls.total) return 'sem chamadas no período';
+    return `${fmtPercent((s.calls.transferred / s.calls.total) * 100)} do total`;
+  });
+
+  readonly kpiAvgDuration = computed(() => {
+    const s = this.summary.data();
+    return s ? fmtDuration(s.durationSeconds.average) : null;
+  });
+
+  readonly kpiTotalMinutes = computed(() => {
+    const s = this.summary.data();
+    return s ? `${fmtNumber(Math.round(s.durationSeconds.total / 60))} min no período` : '';
+  });
+
+  setRange(range: DashboardRange): void {
+    if (range === this.range()) return;
+    this.range.set(range);
+    this.summary.reload();
   }
 
-  onOpenVoiceSimulator(): void {
-    this.isVoiceModalOpen.set(true);
-  }
-
-  onCloseVoiceSimulator(): void {
-    this.isVoiceModalOpen.set(false);
-  }
-
-  onOpenCallDetails(call: Call): void {
-    this.inspectedCall.set(call);
-    this.isCallModalOpen.set(true);
-  }
-
-  onCloseCallDetails(): void {
-    this.isCallModalOpen.set(false);
+  refreshAll(): void {
+    this.summary.reload();
+    this.calls.reload();
+    this.agents.reload();
+    this.onboarding.reload();
+    this.phoneNumbers.reload();
+    this.session.refresh();
   }
 }

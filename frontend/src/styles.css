@@ -612,3 +612,157 @@ h1, h2, h3, h4, h5, h6 {
   animation: dashPulseNeon 3s ease-in-out infinite;
 }
 
+
+/* ==========================================================================
+   VOZLY DASHBOARD — SUPERFÍCIES DA VISÃO GERAL (v2)
+   Painéis sólidos e escuros inspirados em dashboards SaaS: menos glow,
+   mais hierarquia tipográfica e alinhamento consistente.
+   ========================================================================== */
+
+:root {
+  --vz-surface: #111016;
+  --vz-surface-2: #16141D;
+  --vz-surface-inset: #0B0A10;
+  --vz-border: rgba(255, 255, 255, 0.07);
+  --vz-border-strong: rgba(168, 85, 247, 0.35);
+  --vz-grid-line: rgba(255, 255, 255, 0.06);
+  --vz-accent: #8B5CF6;
+  --vz-accent-soft: rgba(139, 92, 246, 0.16);
+}
+
+@keyframes vzShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.vz-panel {
+  background: var(--vz-surface);
+  border: 1px solid var(--vz-border);
+  border-radius: 18px;
+  padding: 20px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vz-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vz-panel-head > div:first-child { min-width: 0; }
+
+@media (max-width: 520px) {
+  .vz-panel-head { flex-wrap: wrap; }
+}
+
+.vz-panel-title {
+  font-family: var(--font-display);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.vz-panel-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+.vz-seg {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 10px;
+  background: var(--vz-surface-inset);
+  border: 1px solid var(--vz-border);
+}
+
+.vz-seg button {
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.vz-seg button:hover { color: #FFFFFF; }
+
+.vz-seg button.active {
+  background: var(--vz-accent);
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.35);
+}
+
+.vz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--vz-surface-2);
+  border: 1px solid var(--vz-border);
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.vz-btn:hover { color: #FFFFFF; border-color: var(--vz-border-strong); }
+
+.vz-btn-primary {
+  color: #FFFFFF;
+  background: var(--vz-accent);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
+}
+
+.vz-btn-primary:hover { background: #9B6DFA; }
+
+.vz-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #C084FC;
+  white-space: nowrap;
+}
+
+.vz-link:hover { color: #FFFFFF; }
+
+.vz-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.vz-tag::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.vz-tag[data-tone='green'] { color: #4ADE80; background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.22); }
+.vz-tag[data-tone='purple'] { color: #C084FC; background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.25); }
+.vz-tag[data-tone='amber'] { color: #FBBF24; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.22); }
+.vz-tag[data-tone='red'] { color: #F87171; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.22); }
+.vz-tag[data-tone='blue'] { color: #38BDF8; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.22); }
+.vz-tag[data-tone='neutral'] { color: #A1A1AA; background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1); }
