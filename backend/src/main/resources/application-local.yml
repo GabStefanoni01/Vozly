@@ -27,7 +27,11 @@ spring:
 
 vozly:
   security:
+    cors:
+      allowed-origin: ${FRONTEND_URL:http://localhost:4200}
+    frontend-url: ${FRONTEND_URL:http://localhost:4200}
     jwt:
+      issuer: ${VOZLY_JWT_ISSUER:https://api.vozly.local}
       secret: ${VOZLY_JWT_SECRET:local-only-change-this-secret-to-at-least-32-bytes}
       issuer: ${VOZLY_JWT_ISSUER:https://api.vozly.local}
       audience: ${VOZLY_JWT_AUDIENCE:vozly-api}
