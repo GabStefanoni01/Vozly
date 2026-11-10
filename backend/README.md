@@ -97,7 +97,7 @@ A solicitação é armazenada em `vozly.interest_submissions`. O endpoint é pú
 
 ## Persistência
 
-Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse. A migration V4 cria buckets de rate limit no PostgreSQL, compartilhados entre instâncias do backend. A migration V4 cria buckets de rate limiting no PostgreSQL, compartilhados entre instâncias, com limpeza oportunista de janelas antigas.
+Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse. A migration V4 cria buckets de rate limiting no PostgreSQL, compartilhados entre instâncias, com limpeza oportunista de janelas antigas.
 
 ## Executar e testar
 
@@ -127,7 +127,7 @@ O profile de teste usa H2 em memória. Para executar localmente contra Neon, con
 - O primeiro tenant de uma conta é selecionado no login local; seleção/troca de workspace será implementada junto ao módulo de memberships.
 - Login, cadastro, refresh e interesse possuem rate limiting por IP persistido no PostgreSQL, compartilhado entre instâncias. O limite excedido retorna HTTP 429. O endereço é obtido de `request.getRemoteAddr()`; `X-Forwarded-For` não é confiável sem configuração explícita de proxy confiável.
 - O frontend mantém o access token somente em memória; ao recarregar a página, a próxima consulta autenticada deve renovar a sessão com o refresh cookie.
-- Configure HTTPS e `COOKIE_SECURE=true` em qualquer ambiente publicado. O profile local é o único que contém valores de desenvolvimento para JWT e Microsoft; não o ative em produção. O profile local é o único que contém valores de desenvolvimento para JWT e Microsoft; não o ative em produção.
+- Configure HTTPS e `COOKIE_SECURE=true` em qualquer ambiente publicado. O profile local é o único que contém valores de desenvolvimento para JWT e Microsoft; não o ative em produção.
 
 
 ## Desenvolvimento local — autenticação e CORS
