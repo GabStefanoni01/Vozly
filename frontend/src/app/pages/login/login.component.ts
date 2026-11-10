@@ -598,7 +598,7 @@ export class LoginComponent {
     this.mensagem = 'Acesso demonstrativo validado. Redirecionando para o painel...';
 
     setTimeout(() => {
-      this.router.navigate(['/']);
+      this.router.navigate(['/dashboard']);
     }, 1200);
   }
 

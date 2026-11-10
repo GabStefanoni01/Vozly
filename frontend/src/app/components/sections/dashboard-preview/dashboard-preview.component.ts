@@ -1,11 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../ui/icon/icon.component';
 
 @Component({
   selector: 'app-dashboard-preview',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, RouterLink, IconComponent],
   template: `
     <section class="section dashboard-preview-section" id="painel">
       <div class="ambient-glow glow-violet dash-glow" aria-hidden="true"></div>
@@ -38,9 +39,12 @@ import { IconComponent } from '../../ui/icon/icon.component';
             </p>
 
             <div class="dashboard-cta-actions">
-              <button class="btn btn-primary btn-lg" (click)="onOpenDashboardDemo()">
-                <span>Conhecer a Vozly</span>
+              <a routerLink="/dashboard" class="btn btn-primary btn-lg">
+                <span>Acessar Painel ao Vivo</span>
                 <app-icon name="arrow-right" [size]="18"></app-icon>
+              </a>
+              <button class="btn btn-secondary btn-lg" (click)="onOpenDashboardDemo()">
+                <span>Solicitar Demonstração</span>
               </button>
             </div>
           </div>
