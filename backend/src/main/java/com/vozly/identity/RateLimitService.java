@@ -20,7 +20,7 @@ public class RateLimitService {
                 END,
                 window_started_at = CASE
                     WHEN bucket.window_started_at <= CURRENT_TIMESTAMP - (? * INTERVAL '1 second') THEN CURRENT_TIMESTAMP
-                    ELSE vozly.rate_limit_buckets.window_started_at
+                    ELSE bucket.window_started_at
                 END
             RETURNING request_count
             """;
