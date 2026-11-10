@@ -74,7 +74,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Scan dependencies and filesystem
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -83,6 +83,7 @@ jobs:
           ignore-unfixed: true
           format: sarif
           output: trivy-results.sarif
+          limit-severities-for-sarif: true
           exit-code: "1"
 
       - name: Upload vulnerability findings
