@@ -25,6 +25,10 @@ spring:
             user-name-attribute: sub
 
 server:
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
   port: ${PORT:8080}
   shutdown: graceful
 
@@ -32,13 +36,26 @@ vozly:
   security:
     jwt:
       secret: ${VOZLY_JWT_SECRET}
-      issuer: ${VOZLY_JWT_ISSUER:https://api.vozly.local}
+      issuer: ${VOZLY_JWT_ISSUER}
       audience: ${VOZLY_JWT_AUDIENCE:vozly-api}
     cookies:
       secure: ${COOKIE_SECURE:true}
     cors:
-      allowed-origin: ${FRONTEND_URL:http://localhost:4200}
-    frontend-url: ${FRONTEND_URL:http://localhost:4200}
+      allowed-origin: ${FRONTEND_URL}
+    frontend-url: ${FRONTEND_URL}
+    rate-limit:
+      login:
+        max-attempts: ${RATE_LIMIT_LOGIN_MAX:10}
+        window-seconds: ${RATE_LIMIT_LOGIN_WINDOW:900}
+      registration:
+        max-attempts: ${RATE_LIMIT_REGISTER_MAX:5}
+        window-seconds: ${RATE_LIMIT_REGISTER_WINDOW:3600}
+      interest:
+        max-attempts: ${RATE_LIMIT_INTEREST_MAX:5}
+        window-seconds: ${RATE_LIMIT_INTEREST_WINDOW:3600}
+      refresh:
+        max-attempts: ${RATE_LIMIT_REFRESH_MAX:30}
+        window-seconds: ${RATE_LIMIT_REFRESH_WINDOW:900}
 
 management:
   endpoints:
