@@ -1,7 +1,7 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiAuthService } from '../../services/api-auth.service';
 
 @Component({
@@ -565,7 +565,12 @@ export class LoginComponent {
   mensagem: string | null = null;
   tipoMensagem: 'erro' | 'sucesso' = 'erro';
 
-  constructor(private router: Router, private auth: ApiAuthService) {}
+  constructor(private router: Router, private auth: ApiAuthService, route: ActivatedRoute) {
+    if (route.snapshot.queryParamMap.get('error') === 'microsoft_sso_failed') {
+      this.tipoMensagem = 'erro';
+      this.mensagem = 'Não foi possível entrar com a Microsoft. Tente novamente ou use seu e-mail e senha.';
+    }
+  }
 
   moverBrilho(e: PointerEvent): void {
     const el = this.cartaoRef?.nativeElement;
