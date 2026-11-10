@@ -62,14 +62,32 @@ jobs:
         with:
           category: "/language:${{ matrix.language }}"
 
-  dependency-review:
-    name: Dependency Review
+  vulnerability-scan:
+    name: Vulnerability Scan
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      security-events: write
     steps:
-      - name: Review dependency changes
-        uses: actions/dependency-review-action@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan dependencies and filesystem
+        uses: aquasecurity/trivy-action@0.33.1
         with:
-          fail-on-severity: high
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-results.sarif
+          exit-code: "1"
+
+      - name: Upload vulnerability findings
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
