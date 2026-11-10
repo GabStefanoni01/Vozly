@@ -29,6 +29,7 @@ O MVP será desenhado sem depender de um segmento empresarial específico ou de 
 - [Modelo relacional e persistência](docs/08-modelo-relacional-e-persistencia.md)
 - [Contratos da API administrativa](docs/09-contratos-api-administrativa.md)
 - [Runtime de voz, segurança e operação](docs/10-runtime-de-voz-seguranca-e-operacao.md)
+- [CI/CD e revisão automática de PR](docs/11-ci-cd-e-revisao-automatica.md)
 - [ADR 001 — Monólito modular](docs/decisions/ADR-001-monolito-modular.md)
 - [ADR 002 — Configuração guiada self-service](docs/decisions/ADR-002-configuracao-guiada.md)
 
