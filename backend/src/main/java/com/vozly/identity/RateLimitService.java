@@ -10,11 +10,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class RateLimitService {
     private static final String UPSERT = """
-            INSERT INTO vozly.rate_limit_buckets (bucket_key, window_started_at, request_count)
+            INSERT INTO vozly.rate_limit_buckets AS bucket (bucket_key, window_started_at, request_count)
             VALUES (?, CURRENT_TIMESTAMP, 1)
             ON CONFLICT (bucket_key) DO UPDATE SET
                 request_count = CASE
-                    WHEN vozly.rate_limit_buckets.window_started_at
+                    WHEN bucket.window_started_at
                          <= CURRENT_TIMESTAMP - (? * INTERVAL '1 second') THEN 1
                     ELSE vozly.rate_limit_buckets.request_count + 1
                 END,
@@ -27,6 +27,7 @@ public class RateLimitService {
             """;
 
     private final JdbcTemplate jdbc;
+    private final java.util.concurrent.atomic.AtomicLong cleanupCounter = new java.util.concurrent.atomic.AtomicLong();
 
     public RateLimitService(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
@@ -35,6 +36,9 @@ public class RateLimitService {
     public boolean allow(String route, String remoteAddress, int limit, int windowSeconds) {
         String key = digest(route + ":" + remoteAddress);
         Integer count = jdbc.queryForObject(UPSERT, Integer.class, key, windowSeconds, windowSeconds);
+        if (cleanupCounter.incrementAndGet() % 100 == 0) {
+            jdbc.update("DELETE FROM vozly.rate_limit_buckets WHERE window_started_at < CURRENT_TIMESTAMP - INTERVAL '2 days'");
+        }
         return count != null && count <= limit;
     }
 
