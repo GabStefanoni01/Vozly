@@ -16,10 +16,10 @@ public class RateLimitService {
             ON CONFLICT (bucket_key) DO UPDATE SET
                 request_count = CASE
                     WHEN bucket.window_started_at <= CURRENT_TIMESTAMP - (? * INTERVAL '1 second') THEN 1
-                    ELSE vozly.rate_limit_buckets.request_count + 1
+                    ELSE bucket.request_count + 1
                 END,
                 window_started_at = CASE
-                    WHEN vozly.rate_limit_buckets.window_started_at <= CURRENT_TIMESTAMP - (? * INTERVAL '1 second') THEN CURRENT_TIMESTAMP
+                    WHEN bucket.window_started_at <= CURRENT_TIMESTAMP - (? * INTERVAL '1 second') THEN CURRENT_TIMESTAMP
                     ELSE vozly.rate_limit_buckets.window_started_at
                 END
             RETURNING request_count
