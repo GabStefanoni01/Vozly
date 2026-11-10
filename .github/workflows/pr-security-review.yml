@@ -55,7 +55,7 @@ jobs:
 
       - name: Build backend for CodeQL
         if: matrix.language == 'java-kotlin'
-        run: mvn --batch-mode --no-transfer-progress -f backend/pom.xml -DskipTests package
+        run: mvn --batch-mode --no-transfer-progress -f backend/pom.xml -Dmaven.test.skip=true package
 
       - name: Analyze
         uses: github/codeql-action/analyze@v3
