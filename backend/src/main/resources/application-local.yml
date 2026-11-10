@@ -14,6 +14,11 @@ spring:
     default-schema: vozly
     locations: classpath:db/migration
 
+vozly:
+  security:
+    cookies:
+      secure: ${COOKIE_SECURE:false}
+
 logging:
   level:
     org.flywaydb: INFO
