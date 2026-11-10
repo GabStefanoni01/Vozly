@@ -50,6 +50,19 @@ Microsoft SSO: iniciar em `GET /oauth2/authorization/microsoft`. Após autentica
 
 O access token dura 10 minutos. O refresh token é opaco, tem validade de 30 dias, é armazenado somente como SHA-256 no banco e sofre rotação a cada uso. O cookie usa HttpOnly, SameSite=Strict e Secure conforme `COOKIE_SECURE`.
 
+O endpoint de cadastro de conta aceita exclusivamente os campos abaixo em `POST /api/v1/auth/register`:
+
+```json
+{
+  "name": "Nome da pessoa",
+  "email": "pessoa@empresa.com",
+  "password": "senha-com-12-caracteres-ou-mais",
+  "workspaceName": "Minha empresa"
+}
+```
+
+A resposta inclui access token e define o refresh token em cookie HttpOnly. Os limites de tamanho e validações são definidos pelo DTO `RegisterRequest` no backend.
+
 ## Registro de interesse da landing page
 
 O formulário atual do modal envia os mesmos três campos apresentados na interface:
@@ -109,8 +122,7 @@ O profile de teste usa H2 em memória. Para executar localmente contra Neon, con
 - Recuperação de senha, MFA e vínculo manual de uma conta local com Microsoft ainda não estão incluídos.
 - O primeiro tenant de uma conta é selecionado no login local; seleção/troca de workspace será implementada junto ao módulo de memberships.
 - Rate limiting por IP/conta e bloqueio progressivo por tentativas ainda precisam ser implementados antes de exposição pública.
-- O formulário de login Angular ainda simula a autenticação e precisa ser conectado ao endpoint existente. A interface não possui formulário de criação de conta; o link atual apenas informa sobre o cadastro antecipado.
-- O botão social atualmente exibido no Angular menciona Google, enquanto o backend está configurado para Microsoft Entra ID. Alinhar a interface e a decisão de provedor antes da integração social.
+- O frontend mantém o access token somente em memória; ao recarregar a página, a próxima consulta autenticada deve renovar a sessão com o refresh cookie.
 - Configure HTTPS e `COOKIE_SECURE=true` em qualquer ambiente publicado.
 
 
