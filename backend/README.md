@@ -98,7 +98,7 @@ A solicitação é armazenada em `vozly.interest_submissions`. O endpoint é pú
 
 ## Persistência
 
-Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse. A migration V4 cria buckets de rate limit no PostgreSQL, compartilhados entre instâncias do backend. A migration V4 cria os buckets persistentes de rate limiting, com limpeza oportunista de janelas antigas.
+Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse. A migration V4 cria buckets de rate limit no PostgreSQL, compartilhados entre instâncias do backend. A migration V4 cria buckets de rate limit no PostgreSQL, compartilhados entre instâncias do backend. A migration V4 cria os buckets persistentes de rate limiting, com limpeza oportunista de janelas antigas.
 
 ## Executar e testar
 
