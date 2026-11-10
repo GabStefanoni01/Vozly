@@ -92,7 +92,7 @@ Após selecionar a versão do Node indicada em `.nvmrc`, execute `npm install` p
 
 ---
 
-> ℹ️ **Nota de Engenharia:** Este frontend é estritamente de apresentação e demonstração interativa. Não há dependências diretas de backend ou chamadas de API ativas nesta etapa.
+> ℹ️ **Nota de Engenharia:** A landing page mantém a apresentação do produto e o modal de interesse; as telas de autenticação e o formulário de interesse agora consomem a API configurada no ambiente.
 
 
 ## Integração local com a API
