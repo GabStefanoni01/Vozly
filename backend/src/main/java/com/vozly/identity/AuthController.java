@@ -31,9 +31,10 @@ public class AuthController {
     }
 
     @GetMapping("/csrf")
-    public Map<String, String> csrf(HttpServletRequest request) {
+    public ResponseEntity<Map<String, String>> csrf(HttpServletRequest request) {
         CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-        return Map.of("token", csrfToken.getToken());
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .header(HttpHeaders.PRAGMA, "no-cache").body(Map.of("token", csrfToken.getToken()));
     }
 
     @PostMapping("/register")
