@@ -76,6 +76,8 @@ import { ApiAuthService } from '../../../services/api-auth.service';
             />
           </div>
 
+          <p *ngIf="error" class="form-error" role="alert">{{ error }}</p>
+
           <div class="disclaimer-note">
             <app-icon name="alert-circle" [size]="16" color="#A855F7"></app-icon>
             <span>
@@ -237,6 +239,8 @@ import { ApiAuthService } from '../../../services/api-auth.service';
       color: var(--text-secondary);
       line-height: 1.4;
     }
+
+.form-error { color: #FCA5A5; font-size: 13px; line-height: 1.4; }
 
     .modal-actions {
       margin-top: 8px;
