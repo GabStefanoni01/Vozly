@@ -112,3 +112,12 @@ O profile de teste usa H2 em memória. Para executar localmente contra Neon, con
 - O formulário de login Angular ainda simula a autenticação e precisa ser conectado ao endpoint existente. A interface não possui formulário de criação de conta; o link atual apenas informa sobre o cadastro antecipado.
 - O botão social atualmente exibido no Angular menciona Google, enquanto o backend está configurado para Microsoft Entra ID. Alinhar a interface e a decisão de provedor antes da integração social.
 - Configure HTTPS e `COOKIE_SECURE=true` em qualquer ambiente publicado.
+
+
+## Desenvolvimento local — autenticação e CORS
+
+Com o perfil local ativo, o backend aceita o frontend em `http://localhost:4200` (configurável por `FRONTEND_URL`) e define `COOKIE_SECURE=false` por padrão para permitir cookies HTTP em localhost. Em produção, mantenha cookies Secure habilitados e use HTTPS.
+
+Para habilitar Microsoft Entra ID localmente, configure `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` e `MICROSOFT_TENANT_ID`. Cadastre no aplicativo Entra ID o redirect URI do backend: `http://localhost:8080/login/oauth2/code/microsoft`. O callback da aplicação é `http://localhost:4200/auth/sso/callback`.
+
+O frontend chama a API local em `http://localhost:8080`; essa URL pode ser alterada em `frontend/src/environments/environment.ts`. Não é necessário hospedar os serviços para validar os fluxos localmente.
