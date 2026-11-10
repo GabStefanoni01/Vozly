@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,11 +31,11 @@ public class InterestController {
     }
 
     public record InterestRequest(
-            @NotBlank String company,
+            @NotBlank @Size(max = 160) String company,
             @NotBlank
-            @Pattern(regexp = "assistencia|clinica|oficina|manutencao|servicos|outros")
+            @Size(max = 24) @Pattern(regexp = "assistencia|clinica|oficina|manutencao|servicos|outros")
             String segment,
-            @NotBlank @Email String email) {}
+            @NotBlank @Email @Size(max = 320) String email) {}
 
     public record InterestResponse(UUID id, String status) {}
 }

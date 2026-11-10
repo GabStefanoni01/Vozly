@@ -23,6 +23,8 @@ public class MicrosoftLoginFailureHandler implements AuthenticationFailureHandle
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
+        response.setHeader("Cache-Control", "no-store");
+        response.setHeader("Pragma", "no-cache");
         response.sendRedirect(UriComponentsBuilder.fromUriString(frontendUrl)
                 .path("/login").queryParam("error", "microsoft_sso_failed").build().toUriString());
     }

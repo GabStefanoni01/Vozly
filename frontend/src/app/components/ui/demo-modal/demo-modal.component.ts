@@ -45,6 +45,7 @@ import { ApiAuthService } from '../../../services/api-auth.service';
             <input
               id="companyName"
               type="text"
+              maxlength="160"
               name="companyName"
               [(ngModel)]="formData.company"
               placeholder="Ex.: Assistência Técnica Silva ou Clínica Viva"
@@ -69,6 +70,7 @@ import { ApiAuthService } from '../../../services/api-auth.service';
             <input
               id="userEmail"
               type="email"
+              maxlength="320"
               name="userEmail"
               [(ngModel)]="formData.email"
               placeholder="seuemail@empresa.com.br"

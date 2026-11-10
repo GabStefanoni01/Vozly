@@ -13,11 +13,37 @@ spring:
     schemas: vozly
     default-schema: vozly
     locations: classpath:db/migration
+  security:
+    oauth2:
+      client:
+        registration:
+          microsoft:
+            client-id: ${MICROSOFT_CLIENT_ID:local-not-configured}
+            client-secret: ${MICROSOFT_CLIENT_SECRET:local-not-configured}
+        provider:
+          microsoft:
+            authorization-uri: https://login.microsoftonline.com/${MICROSOFT_TENANT_ID:organizations}/oauth2/v2.0/authorize
+            token-uri: https://login.microsoftonline.com/${MICROSOFT_TENANT_ID:organizations}/oauth2/v2.0/token
+
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: ${COOKIE_SECURE:false}
+        same-site: lax
 
 vozly:
   security:
+    jwt:
+      secret: ${VOZLY_JWT_SECRET:local-only-change-this-secret-to-at-least-32-bytes}
+      issuer: ${VOZLY_JWT_ISSUER:https://api.vozly.local}
+      audience: ${VOZLY_JWT_AUDIENCE:vozly-api}
     cookies:
       secure: ${COOKIE_SECURE:false}
+    cors:
+      allowed-origin: ${FRONTEND_URL:http://localhost:4200}
+    frontend-url: ${FRONTEND_URL:http://localhost:4200}
 
 logging:
   level:

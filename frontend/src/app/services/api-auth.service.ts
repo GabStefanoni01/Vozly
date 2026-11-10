@@ -31,17 +31,28 @@ export class ApiAuthService {
   }
 
   async login(email: string, password: string): Promise<void> {
+    const csrf = await this.getCsrfToken();
     const result = await firstValueFrom(this.http.post<AuthResponse>(
-      `${this.baseUrl}/api/v1/auth/login`, { email, password }, { withCredentials: true }
+      `${this.baseUrl}/api/v1/auth/login`, { email, password },
+      { withCredentials: true, headers: new HttpHeaders({ 'X-XSRF-TOKEN': csrf }) }
     ));
     this.accessToken = result.accessToken;
   }
 
   async register(payload: RegisterPayload): Promise<void> {
+    const csrf = await this.getCsrfToken();
     const result = await firstValueFrom(this.http.post<AuthResponse>(
-      `${this.baseUrl}/api/v1/auth/register`, payload, { withCredentials: true }
+      `${this.baseUrl}/api/v1/auth/register`, payload,
+      { withCredentials: true, headers: new HttpHeaders({ 'X-XSRF-TOKEN': csrf }) }
     ));
     this.accessToken = result.accessToken;
+  }
+
+  private async getCsrfToken(): Promise<string> {
+    const response = await firstValueFrom(this.http.get<{ token: string }>(
+      `${this.baseUrl}/api/v1/auth/csrf`, { withCredentials: true }
+    ));
+    return response.token;
   }
 
   async completeMicrosoftLogin(): Promise<void> {
