@@ -13,6 +13,9 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PasswordResetService {
+    private static final Logger log = LoggerFactory.getLogger(PasswordResetService.class);
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int TOKEN_VALIDITY_MINUTES = 30;
     private final JdbcTemplate jdbc;
@@ -82,7 +86,12 @@ public class PasswordResetService {
 
                 Vozly
                 """.formatted(resetUrl));
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+        } catch (MailException exception) {
+            // Keep the response identical for existing and unknown addresses.
+            log.error("Password reset email delivery failed. Check SMTP configuration.", exception);
+        }
     }
 
     @Transactional
