@@ -237,6 +237,46 @@ class AuthServiceIntegrationTests {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.users", Integer.class)).isEqualTo(1);
     }
 
+
+    @Test
+    void passwordResetChangesPasswordConsumesTokenAndRevokesRefreshSessions() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+
+        passwordResetService.requestReset(" GABRIEL@example.com ");
+        ArgumentCaptor<SimpleMailMessage> message = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(message.capture());
+        String resetLink = message.getValue().getText().lines()
+                .filter(line -> line.contains("/reset-password?token="))
+                .findFirst().orElseThrow();
+        String token = resetLink.substring(resetLink.indexOf("token=") + 6);
+
+        passwordResetService.resetPassword(token, "a-new-strong-password");
+
+        String storedHash = jdbc.queryForObject(
+                "SELECT password_hash FROM vozly.users WHERE id = ?",
+                String.class, registered.userId());
+        assertThat(passwordEncoder.matches("a-new-strong-password", storedHash)).isTrue();
+        assertThat(passwordEncoder.matches("a-very-strong-password", storedHash)).isFalse();
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM vozly.refresh_token_sessions
+                WHERE user_id = ? AND revoked_at IS NOT NULL
+                """, Integer.class, registered.userId())).isEqualTo(1);
+        assertThatThrownBy(() -> authService.refresh(registered.refreshToken(), null, null))
+                .isInstanceOf(BadCredentialsException.class);
+        assertThatThrownBy(() -> passwordResetService.resetPassword(token, "another-new-password"))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void passwordResetRequestDoesNotRevealUnknownEmail() {
+        passwordResetService.requestReset("unknown@example.com");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.password_reset_tokens", Integer.class))
+                .isZero();
+        org.mockito.Mockito.verifyNoInteractions(mailSender);
+    }
+
     @Test
     void invalidPasswordIsRejected() {
         authService.register("Gabriel", "gabriel@example.com", "a-very-strong-password",
