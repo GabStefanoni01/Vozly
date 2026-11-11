@@ -1,6 +1,6 @@
 # Contratos da API administrativa
 
- > Contrato administrativo da Vozly. Os endpoints identificados como implementados refletem o backend atual; os demais recursos continuam como propostas. A descrição OpenAPI deverá ser mantida junto da implementação e validada em CI.
+> Contrato administrativo da Vozly. Os endpoints identificados como implementados refletem o backend atual; os demais recursos continuam como propostas. A descrição OpenAPI deverá ser mantida junto da implementação e validada em CI.
 
 ## 1. Escopo e separação
 
@@ -54,11 +54,11 @@ Adotar Problem Details (RFC 9457) ou envelope equivalente padronizado. Proposta:
 Não incluir stack trace, SQL, segredo, conteúdo sensível ou informação que confirme recurso de outro tenant.
 
 Códigos HTTP:
-- 400: request malformado.
+- 400: request malformado ou falha de validação dos campos (inclui `VALIDATION_ERROR`).
 - 401: ausência/invalidade de autenticação.
 - 403: identidade autenticada sem permissão.
 - 404: recurso inexistente ou fora do escopo visível do tenant.
-- 409: conflito de estado, duplicidade ou versão concorrente.
+- 409: conflito de estado, duplicidade ou versão concorrente (inclui `EMAIL_ALREADY_REGISTERED`, `ACCOUNT_LINK_REQUIRED` e `RESOURCE_CONFLICT`).
 - 422: conteúdo sintaticamente válido, mas inválido nas regras de domínio.
 - 429: limite de requisições excedido.
 - 500: falha inesperada sem detalhes internos.
@@ -81,7 +81,7 @@ Regras do produto:
 - Cada usuário pertence a exatamente um workspace. A migration V6 impõe unicidade por `memberships.user_id`.
 - Um workspace pode ter vários usuários, cada um com sua própria membership e papel.
 - O cadastro local exige senha entre 12 e 128 caracteres e normaliza o e-mail.
-- O refresh token é armazenado no banco somente como hash; o cookie é HttpOnly, SameSite Strict e Secure conforme configuração.
+- O refresh token é armazenado no banco somente como hash; o cookie é HttpOnly, SameSite Strict e Secure conforme configuração. Access token tem validade de 10 minutos e não é persistido no localStorage.
 - Nunca aceitar papel, user_id ou tenant_id do cliente como prova de autorização.
 - Recuperação de senha ainda não está implementada.
 
