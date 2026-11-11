@@ -221,8 +221,8 @@ public class DashboardController {
     private CallCounters counters(UUID tenantId, Instant from, Instant to) {
         return jdbc.queryForObject("""
                 SELECT COUNT(*) AS total,
-                       COUNT(*) FILTER (WHERE status = 'COMPLETED' AND end_reason <> 'TRANSFERRED') AS completed,
-                       COUNT(*) FILTER (WHERE status = 'COMPLETED' AND end_reason = 'TRANSFERRED') AS transferred,
+                       COUNT(*) FILTER (WHERE status = 'COMPLETED' AND end_reason IS DISTINCT FROM 'TRANSFERRED') AS completed,
+                       COUNT(*) FILTER (WHERE end_reason = 'TRANSFERRED') AS transferred,
                        COUNT(*) FILTER (WHERE status IN ('FAILED', 'REJECTED', 'TIMED_OUT')) AS failed
                 FROM vozly.calls
                 WHERE tenant_id = ? AND started_at >= ? AND started_at < ?
