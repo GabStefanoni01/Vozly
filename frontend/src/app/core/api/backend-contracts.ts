@@ -69,9 +69,9 @@ export const BACKEND_CONTRACTS = {
     method: 'GET',
     path: '/api/v1/tenants/current',
     module: 'com.vozly.tenants',
-    availability: 'pending',
+    availability: 'available',
     backendSteps: [
-      'Criar migration da tabela tenants (id, name, slug, status, timestamps).',
+      'Tabela tenants já existe na migration V2; consultar o tenant do claim validado no JWT.',
       COMMON_TENANT_STEP,
       'Implementar TenantController.current() retornando { id, name, slug, status, createdAt }.'
     ],
@@ -84,9 +84,9 @@ export const BACKEND_CONTRACTS = {
     method: 'GET',
     path: '/api/v1/onboarding',
     module: 'com.vozly.tenants',
-    availability: 'pending',
+    availability: 'available',
     backendSteps: [
-      'Criar migration onboarding_progress (tenant_id UNIQUE, current_step, completed_steps, status).',
+      'Migration V5 cria onboarding_progress; calcular etapas com base nos recursos persistidos e manter pendentes os módulos ainda indisponíveis.',
       'Calcular cada etapa a partir de pré-requisitos reais (agente existe, conhecimento ativo, número vinculado, versão publicada) — o progresso é informativo e não concede permissões.',
       'Retornar { status, currentStep, steps: [{ key, completed, pendingReason }] } com keys WORKSPACE, MEMBERS, AGENT, KNOWLEDGE, TOOLS, PHONE_NUMBER, TEST, PUBLISH.'
     ],
@@ -99,9 +99,9 @@ export const BACKEND_CONTRACTS = {
     method: 'GET',
     path: '/api/v1/usage/summary?from={iso}&to={iso}&granularity=DAY',
     module: 'com.vozly.usage + com.vozly.conversations',
-    availability: 'pending',
+    availability: 'available',
     backendSteps: [
-      'Criar migrations de calls e usage_records com índices calls(tenant_id, started_at DESC) e usage_records(tenant_id, occurred_at, metric) (docs/08 §5).',
+      'Migration V5 cria calls e usage_records com índices tenant-scoped; o resumo agrega chamadas persistidas enquanto a ingestão pelo runtime não estiver disponível.',
       'Agregar no período: total, concluídas, transferidas, falhas; repetir para o período anterior de mesmo tamanho (previousCalls).',
       'Contar inProgress (status ACTIVE ou TRANSFERRING) e somar duração total/média.',
       'Agrupar end_reason em endReasons e gerar série diária { date, calls, minutes } preenchendo dias sem chamadas com zero.',
@@ -116,9 +116,9 @@ export const BACKEND_CONTRACTS = {
     method: 'GET',
     path: '/api/v1/calls?page=0&size=6&sort=startedAt,desc',
     module: 'com.vozly.conversations',
-    availability: 'pending',
+    availability: 'available',
     backendSteps: [
-      'Criar migration de calls (docs/08 §3.5) com agent_version_id obrigatório.',
+      'Migration V5 cria calls com agent_version_id obrigatório e FKs compostas por tenant.',
       'Implementar CallController.list com Pageable, sort allowlisted (startedAt, durationSeconds) e size máximo 100.',
       'Retornar envelope { data, pagination } com itens CallListItem; mascarar o número de origem no servidor (LGPD).',
       'OPERATOR recebe dados minimizados (docs/09 matriz de permissões).'
@@ -132,9 +132,9 @@ export const BACKEND_CONTRACTS = {
     method: 'GET',
     path: '/api/v1/agents?size=20&sort=updatedAt,desc',
     module: 'com.vozly.agents',
-    availability: 'pending',
+    availability: 'available',
     backendSteps: [
-      'Criar migrations agents e agent_versions (docs/08 §3.2).',
+      'Migration V5 cria agents e agent_versions com vínculo tenant-scoped.',
       'Implementar AgentController.list retornando { id, name, status, draftRevision, publishedVersion, updatedAt } no envelope paginado.',
       'Filtrar por tenant no repositório (não apenas no controller) e ignorar ARCHIVED por padrão.'
     ],
@@ -147,9 +147,9 @@ export const BACKEND_CONTRACTS = {
     method: 'GET',
     path: '/api/v1/phone-numbers',
     module: 'com.vozly.telephony',
-    availability: 'pending',
+    availability: 'available',
     backendSteps: [
-      'Escolher o provedor de telefonia (decisão pendente em docs/10 §12) e criar o adaptador.',
+      'A persistência é provider-agnostic; seleção do provedor e provisionamento de números continuam pendentes.',
       'Criar migration phone_numbers (tenant_id, provider_key, provider_number_ref, e164, status, routing_config).',
       'Implementar PhoneNumberController.list retornando { id, e164, status, providerKey, agentId, agentName }.'
     ],

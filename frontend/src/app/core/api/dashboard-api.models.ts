@@ -41,9 +41,7 @@ export type MembershipRole = 'OWNER' | 'ADMIN' | 'OPERATOR';
 
 /**
  * `GET /api/v1/auth/me` — ✅ implementado (AuthController.me).
- * Hoje retorna apenas os claims do JWT: `{ userId, tenantId, role }`.
- * `name`/`email` são opcionais: quando o backend passar a devolvê-los
- * (consultando `users`), o header do painel já os exibe.
+ * Retorna os claims validados do JWT e nome/e-mail consultados em `users`.
  */
 export interface MeResponse {
   userId: string;

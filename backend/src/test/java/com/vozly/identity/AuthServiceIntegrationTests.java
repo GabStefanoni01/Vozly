@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 class AuthServiceIntegrationTests {
     @Autowired AuthService authService;
     @Autowired JdbcTemplate jdbc;
+    @Autowired org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void prepareSchema() {
@@ -80,6 +81,11 @@ class AuthServiceIntegrationTests {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.users", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.tenants", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT role FROM vozly.memberships", String.class)).isEqualTo("OWNER");
+        String storedPassword = jdbc.queryForObject(
+                "SELECT password_hash FROM vozly.users WHERE id = ?",
+                String.class, registered.userId());
+        assertThat(storedPassword).isNotEqualTo("a-very-strong-password");
+        assertThat(passwordEncoder.matches("a-very-strong-password", storedPassword)).isTrue();
 
         AuthService.AuthResult login = authService.login(
                 "gabriel@example.com", "a-very-strong-password", "test-agent", "127.0.0.1");
