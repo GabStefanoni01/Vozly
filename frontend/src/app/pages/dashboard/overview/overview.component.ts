@@ -28,12 +28,12 @@ const RANGE_LABEL: Record<DashboardRange, string> = {
  *
  * | Bloco                         | Endpoint                         | Backend         |
  * |-------------------------------|----------------------------------|-----------------|
- * | Saudação / workspace          | GET /me, GET /tenants/current    | ⏳ pendente     |
- * | KPIs, gráfico, resultados     | GET /usage/summary               | ⏳ pendente     |
- * | Chamadas recentes             | GET /calls                       | ⏳ pendente     |
- * | Agentes                       | GET /agents                      | ⏳ pendente     |
- * | Ativação                      | GET /onboarding                  | ⏳ pendente     |
- * | Números                       | GET /phone-numbers               | ⏳ pendente     |
+ * | Saudação / workspace          | GET /me, GET /tenants/current    | ✅ disponível   |
+ * | KPIs, gráfico, resultados     | GET /usage/summary               | ✅ disponível   |
+ * | Chamadas recentes             | GET /calls                       | ✅ disponível   |
+ * | Agentes                       | GET /agents                      | ✅ disponível   |
+ * | Ativação                      | GET /onboarding                  | ✅ disponível   |
+ * | Números                       | GET /phone-numbers               | ✅ disponível   |
  * | Saúde da plataforma           | GET /actuator/health             | ✅ disponível   |
  */
 @Component({
