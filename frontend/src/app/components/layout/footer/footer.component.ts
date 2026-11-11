@@ -1,11 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../ui/icon/icon.component';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, RouterLink, IconComponent],
   template: `
     <footer class="site-footer">
       <div class="container footer-container">
@@ -58,6 +59,7 @@ import { IconComponent } from '../../ui/icon/icon.component';
               <li><a href="#integracoes">Ecossistema de integrações</a></li>
               <li><a href="#seguranca">Governança & segurança</a></li>
               <li><a href="#seguranca">Privacidade e dados</a></li>
+              <li><a routerLink="/blog">Blog & Insights</a></li>
               <li>
                 <button class="footer-btn-link" (click)="onOpenRoadmap()">
                   <span>Visão do Roadmap</span>

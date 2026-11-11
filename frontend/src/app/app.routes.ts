@@ -103,5 +103,27 @@ export const routes: Routes = [
     ]
   },
 
+  // Blog Institucional — Vozly Insights
+  {
+    path: 'blog',
+    loadComponent: () =>
+      import('./pages/blog/blog-home/blog-home.component').then(m => m.BlogHomeComponent),
+    title: 'Vozly Insights — Tecnologia, IA & Inovação'
+  },
+  {
+    path: 'blog/:category',
+    loadComponent: () =>
+      import('./pages/blog/blog-category/blog-category.component').then(
+        m => m.BlogCategoryComponent
+      )
+  },
+  {
+    path: 'blog/:category/:slug',
+    loadComponent: () =>
+      import('./pages/blog/blog-article/blog-article.component').then(
+        m => m.BlogArticleComponent
+      )
+  },
+
   { path: '**', redirectTo: '' }
 ];
