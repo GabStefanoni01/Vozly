@@ -50,7 +50,8 @@ class AuthServiceIntegrationTests {
                     user_id UUID NOT NULL REFERENCES vozly.users(id), role VARCHAR(20) NOT NULL,
                     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    CONSTRAINT uq_memberships_tenant_user UNIQUE (tenant_id, user_id),\n                    CONSTRAINT uq_memberships_single_workspace_per_user UNIQUE (user_id))
+                    CONSTRAINT uq_memberships_tenant_user UNIQUE (tenant_id, user_id),
+                    CONSTRAINT uq_memberships_single_workspace_per_user UNIQUE (user_id))
                 """);
         jdbc.execute("""
                 CREATE TABLE vozly.external_identities (
