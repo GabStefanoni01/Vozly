@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../components/ui/icon/icon.component';
@@ -28,15 +28,15 @@ import { Call, CallOutcome, CallStatus } from '../../../models/dashboard.models'
         <div class="header-stats-row">
           <div class="mini-stat-card dash-glass-card">
             <span class="msc-label">Chamadas Atendidas</span>
-            <span class="msc-val">1.284</span>
+            <span class="msc-val">{{ state.calls().length }}</span>
           </div>
           <div class="mini-stat-card dash-glass-card">
             <span class="msc-label">Resolução Direta</span>
-            <span class="msc-val green">94.2%</span>
+            <span class="msc-val green">{{ resolvedRate() }}</span>
           </div>
           <div class="mini-stat-card dash-glass-card">
             <span class="msc-label">Transferidas</span>
-            <span class="msc-val purple">86</span>
+            <span class="msc-val purple">{{ transferredCount() }}</span>
           </div>
         </div>
       </header>
@@ -451,6 +451,14 @@ import { Call, CallOutcome, CallStatus } from '../../../models/dashboard.models'
   `]
 })
 export class ConversationsComponent {
+  /** Indicadores calculados a partir das chamadas carregadas (sem valores fixos). */
+  readonly transferredCount = computed(() => this.state.calls().filter(c => c.outcome === 'TRANSFERRED_HUMAN').length);
+  readonly resolvedRate = computed(() => {
+    const calls = this.state.calls();
+    if (!calls.length) return '—';
+    const resolved = calls.filter(c => c.outcome === 'RESOLVED').length;
+    return `${Math.round((resolved / calls.length) * 1000) / 10}%`;
+  });
   searchFilter: string = '';
   statusFilter: string = 'ALL';
   outcomeFilter: string = 'ALL';

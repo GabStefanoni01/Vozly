@@ -144,7 +144,8 @@ import { UserRole } from '../../../models/dashboard.models';
                 <td>
                   <div class="user-row-cell">
                     <img
-                      [src]="member.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=128&q=80'"
+                      *ngIf="member.avatarUrl"
+                      [src]="member.avatarUrl"
                       [alt]="member.name"
                       class="member-avatar"
                     />

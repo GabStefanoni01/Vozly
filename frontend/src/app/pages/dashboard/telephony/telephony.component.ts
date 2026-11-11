@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../components/ui/icon/icon.component';
@@ -38,7 +38,7 @@ import { PhoneNumber } from '../../../models/dashboard.models';
           </div>
           <div class="si-meta">
             <span class="si-label">Linhas Ativas</span>
-            <span class="si-value">2 / 3</span>
+            <span class="si-value">{{ activeLines() }} / {{ state.phoneNumbers().length }}</span>
           </div>
         </div>
 
@@ -48,7 +48,7 @@ import { PhoneNumber } from '../../../models/dashboard.models';
           </div>
           <div class="si-meta">
             <span class="si-label">Tronco SIP Nacional</span>
-            <span class="si-value green">Conectado (16ms)</span>
+            <span class="si-value">Não configurado</span>
           </div>
         </div>
 
@@ -58,7 +58,7 @@ import { PhoneNumber } from '../../../models/dashboard.models';
           </div>
           <div class="si-meta">
             <span class="si-label">Destino de Transbordo</span>
-            <span class="si-value">Ramais Suporte N2</span>
+            <span class="si-value">Não configurado</span>
           </div>
         </div>
       </section>
@@ -308,6 +308,7 @@ import { PhoneNumber } from '../../../models/dashboard.models';
   `]
 })
 export class TelephonyComponent {
+  readonly activeLines = computed(() => this.state.phoneNumbers().filter(n => n.status === 'ACTIVE').length);
   constructor(public state: DashboardStateService) {}
 
   openAddNumberModal(): void {

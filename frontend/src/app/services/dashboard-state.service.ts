@@ -15,7 +15,10 @@ import {
 } from '../models/dashboard.models';
 
 /**
- * VOZLY — CAMADA DE DADOS E ESTADO DEMONSTRATIVO (FASE 02)
+ * VOZLY — ESTADO LOCAL DO PAINEL (sem dados fictícios)
+ *
+ * Todas as coleções começam vazias. Elas devem ser preenchidas pelas respostas
+ * da API (ver core/api/backend-contracts.ts) assim que os endpoints existirem.
  *
  * NOTA ARQUITETURAL:
  * Este serviço gerencia os dados demonstrativos em memória para avaliação visual
@@ -35,50 +38,24 @@ export class DashboardStateService {
   // ESTADO DO USUÁRIO & WORKSPACE
   // ==========================================
   readonly currentWorkspace = signal<WorkspaceTenant>({
-    id: 'ws-0192f6e0-8d5b-7c11-a000-001',
-    name: 'Vozly Telecom & Serviços',
-    slug: 'vozly-telecom',
+    id: '',
+    name: 'Workspace',
+    slug: '',
     status: 'ACTIVE',
-    plan: 'Enterprise Voice AI (Demonstração)',
-    timezone: 'America/Sao_Paulo (UTC-3)',
-    createdAt: '2026-10-15T10:00:00Z'
+    plan: '',
+    timezone: 'America/Sao_Paulo',
+    createdAt: ''
   });
 
   readonly currentUser = signal<User>({
-    id: 'usr-0192f6e0-8d5b-7c11-a000-101',
-    name: 'Jordan Silveira',
-    email: 'jordan@vozly.com.br',
-    role: 'ADMIN',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+    id: '',
+    name: 'Usuário',
+    email: '',
+    role: 'OPERATOR',
     status: 'ACTIVE'
   });
 
-  readonly teamMembers = signal<User[]>([
-    {
-      id: 'usr-0192f6e0-8d5b-7c11-a000-101',
-      name: 'Jordan Silveira',
-      email: 'jordan@vozly.com.br',
-      role: 'ADMIN',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
-      status: 'ACTIVE'
-    },
-    {
-      id: 'usr-0192f6e0-8d5b-7c11-a000-102',
-      name: 'Camila Albuquerque',
-      email: 'camila@vozly.com.br',
-      role: 'OWNER',
-      avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=256&q=80',
-      status: 'ACTIVE'
-    },
-    {
-      id: 'usr-0192f6e0-8d5b-7c11-a000-103',
-      name: 'Lucas Nogueira',
-      email: 'lucas.op@vozly.com.br',
-      role: 'OPERATOR',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
-      status: 'ACTIVE'
-    }
-  ]);
+  readonly teamMembers = signal<User[]>([]);
 
   // ==========================================
   // FERRAMENTAS E CATÁLOGO OFICIAL
@@ -153,583 +130,48 @@ export class DashboardStateService {
   // ==========================================
   // CONEXÕES DE INTEGRAÇÃO
   // ==========================================
-  readonly connections = signal<IntegrationConnection[]>([
-    {
-      id: 'conn-01',
-      integrationKey: 'http.rest',
-      name: 'API do CRM Principal (HubSpot/Salesforce)',
-      baseUrl: 'https://api.crm.empresa.com.br/v2',
-      authType: 'BEARER_TOKEN',
-      secretConfigured: true,
-      status: 'CONNECTED',
-      lastValidatedAt: '2026-11-09T18:30:00Z',
-      createdAt: '2026-10-20T14:10:00Z'
-    },
-    {
-      id: 'conn-02',
-      integrationKey: 'http.webhook',
-      name: 'Webhook de Abertura de Chamados (Zendesk)',
-      baseUrl: 'https://hooks.empresa.com.br/voice-events',
-      authType: 'API_KEY',
-      secretConfigured: true,
-      status: 'CONNECTED',
-      lastValidatedAt: '2026-11-08T09:15:00Z',
-      createdAt: '2026-10-25T11:00:00Z'
-    },
-    {
-      id: 'conn-03',
-      integrationKey: 'http.rest',
-      name: 'ERP Consulta de Boletos & Finanças',
-      baseUrl: 'https://financeiro.empresa.com.br/api',
-      authType: 'BEARER_TOKEN',
-      secretConfigured: false,
-      status: 'PENDING_VALIDATION',
-      createdAt: '2026-11-05T16:45:00Z'
-    }
-  ]);
+  readonly connections = signal<IntegrationConnection[]>([]);
 
   // ==========================================
   // ITENS DE CONHECIMENTO (BASE EMPRESARIAL)
   // ==========================================
-  readonly knowledgeItems = signal<KnowledgeItem[]>([
-    {
-      id: 'kn-01',
-      title: 'Políticas de Atendimento, Horários e Plantão 24h',
-      type: 'FAQ',
-      category: 'Institucional',
-      content: 'Nosso horário comercial é de segunda a sexta, das 08h às 18h. Para emergências técnicas e chamados críticos nível 1, o plantão telefônico opera 24 horas por dia através do ramal 990.',
-      status: 'ACTIVE',
-      assignedAgentIds: ['ag-01', 'ag-02'],
-      tokenCount: 420,
-      updatedAt: '2026-11-08T15:20:00Z'
-    },
-    {
-      id: 'kn-02',
-      title: 'Segunda Via de Boleto e Formas de Pagamento PIX',
-      type: 'FAQ',
-      category: 'Financeiro',
-      content: 'A segunda via de fatura pode ser emitida informando o CNPJ ou CPF do titular. Aceitamos pagamento via PIX copia e cola com compensação instantânea e cartão de crédito.',
-      status: 'ACTIVE',
-      assignedAgentIds: ['ag-01'],
-      tokenCount: 380,
-      updatedAt: '2026-11-07T11:10:00Z'
-    },
-    {
-      id: 'kn-03',
-      title: 'Instruções para Agendamento e Cancelamento de Consultas',
-      type: 'TEXT',
-      category: 'Operacional',
-      content: 'Cancelamentos e reagendamentos devem ser solicitados com antecedência mínima de 2 horas. O agente de voz pode verificar a agenda dos próximos 7 dias úteis.',
-      status: 'ACTIVE',
-      assignedAgentIds: ['ag-01', 'ag-03'],
-      tokenCount: 510,
-      updatedAt: '2026-11-06T14:00:00Z'
-    },
-    {
-      id: 'kn-04',
-      title: 'Catálogo de Planos Vozly Voice AI & SLA de Voz',
-      type: 'DOCUMENT',
-      category: 'Comercial',
-      content: 'Todos os planos Vozly contam com disponibilidade garantida de 99,5%, síntese neural com baixa latência (<400ms) e transcrição com pontuação automática em português brasileiro.',
-      status: 'ACTIVE',
-      assignedAgentIds: ['ag-02'],
-      tokenCount: 780,
-      updatedAt: '2026-11-01T09:00:00Z'
-    }
-  ]);
+  readonly knowledgeItems = signal<KnowledgeItem[]>([]);
 
   // ==========================================
   // NÚMEROS TELEFÔNICOS CADASTRADOS
   // ==========================================
-  readonly phoneNumbers = signal<PhoneNumber[]>([
-    {
-      id: 'ph-01',
-      e164: '+551140038899',
-      formatted: '(11) 4003-8899',
-      provider: 'SIP Trunking Brasil (Telecom Nacional)',
-      status: 'ACTIVE',
-      assignedAgentId: 'ag-01',
-      assignedAgentName: 'Helena — Atendimento Principal & SAC',
-      routingConfig: {
-        fallbackDestination: '+5511987654321',
-        businessHours: 'Seg-Sex 08:00 - 20:00'
-      }
-    },
-    {
-      id: 'ph-02',
-      e164: '+551130032211',
-      formatted: '(11) 3003-2211',
-      provider: 'SIP Trunking Corporativo',
-      status: 'ACTIVE',
-      assignedAgentId: 'ag-02',
-      assignedAgentName: 'Vitor — Vendas & Qualificação de Leads',
-      routingConfig: {
-        fallbackDestination: '+5511999887766',
-        businessHours: 'Seg-Sex 09:00 - 18:00'
-      }
-    },
-    {
-      id: 'ph-03',
-      e164: '+551140049900',
-      formatted: '(11) 4004-9900',
-      provider: 'DID Virtual Cloud',
-      status: 'PENDING',
-      assignedAgentId: null,
-      routingConfig: {
-        fallbackDestination: '',
-        businessHours: '24 Horas'
-      }
-    }
-  ]);
+  readonly phoneNumbers = signal<PhoneNumber[]>([]);
 
   // ==========================================
   // AGENTES DE INTELIGÊNCIA ARTIFICIAL
   // ==========================================
-  readonly agents = signal<Agent[]>([
-    {
-      id: 'ag-01',
-      name: 'Helena — Atendimento Principal & SAC',
-      description: 'Agente de voz principal encarregada de tirar dúvidas, triar solicitações, emitir boletos e transferir casos críticos para a equipe de suporte.',
-      status: 'ACTIVE',
-      language: 'pt-BR',
-      draftRevision: 6,
-      currentPublishedVersion: 2,
-      instructions: `Você é Helena, assistente virtual de voz da empresa Vozly.
-Sua comunicação deve ser clara, empática, profissional e objetiva.
-Sempre cumprimente cordialmente o cliente, pergunte como pode ajudar e forneça respostas baseadas exclusivamente na base de conhecimento autorizada.
-Caso o cliente queira falar com um atendente humano ou se a demanda envolver cancelamento de contrato ou reclamação grave, transfira imediatamente usando a ferramenta call.transfer.`,
-      voiceConfig: {
-        voiceId: 'pt-BR-Wavenet-Helena',
-        voiceName: 'Helena (Voz Neural Feminina Clara)',
-        provider: 'Neural Voice Engine v2',
-        language: 'pt-BR',
-        speed: 1.0,
-        pitch: 1.0,
-        interruptionSensitivity: 'HIGH'
-      },
-      behavior: {
-        openingMessage: 'Olá! Sou a Helena, assistente virtual da Vozly. Como posso ajudar você hoje?',
-        fallbackMessage: 'Desculpe, não consegui entender perfeitamente ou não tenho essa informação no momento. Vou transferir você para nossa equipe humana.',
-        closingMessage: 'Foi um prazer atender você! Tenha um ótimo dia e até logo.',
-        transferPolicy: {
-          enabled: true,
-          destinationNumber: '+5511987654321',
-          department: 'Suporte N2 Humanizado'
-        },
-        collectSummary: true
-      },
-      telephony: {
-        phoneNumberId: 'ph-01',
-        phoneNumber: '(11) 4003-8899',
-        businessHours: '08:00 - 20:00',
-        afterHoursBehavior: 'CLOSING_MESSAGE'
-      },
-      knowledgeItemIds: ['kn-01', 'kn-02', 'kn-03'],
-      tools: [
-        { toolKey: 'knowledge.search', toolName: 'Consultar Conhecimento', enabled: true, implementationType: 'NATIVE' },
-        { toolKey: 'conversation.collect', toolName: 'Coletar Informações', enabled: true, implementationType: 'NATIVE' },
-        { toolKey: 'call.transfer', toolName: 'Transferir Atendimento', enabled: true, implementationType: 'NATIVE' },
-        { toolKey: 'call.request_callback', toolName: 'Solicitar Retorno', enabled: true, implementationType: 'NATIVE' },
-        { toolKey: 'call.end', toolName: 'Encerrar Atendimento', enabled: true, implementationType: 'NATIVE' },
-        { toolKey: 'http.rest', toolName: 'API do CRM Principal', enabled: true, implementationType: 'INTEGRATION_OPERATION', connectionId: 'conn-01' }
-      ],
-      createdAt: '2026-10-18T14:00:00Z',
-      updatedAt: '2026-11-09T17:30:00Z',
-      metrics: {
-        totalCalls: 1284,
-        completedCalls: 1102,
-        transferredCalls: 86,
-        resolutionRate: 94.2,
-        avgDurationSeconds: 135
-      }
-    },
-    {
-      id: 'ag-02',
-      name: 'Vitor — Vendas & Qualificação de Leads',
-      description: 'Agente comercial focado na qualificação de empresas interessadas, apresentação de soluções e agendamento de reuniões com consultores.',
-      status: 'ACTIVE',
-      language: 'pt-BR',
-      draftRevision: 4,
-      currentPublishedVersion: 1,
-      instructions: `Você é Vitor, consultor de inteligência de voz da Vozly.
-Converse de forma engajada, demonstrando valor e fazendo perguntas de qualificação para entender o porte da empresa e volume de chamadas.`,
-      voiceConfig: {
-        voiceId: 'pt-BR-Neural-Vitor',
-        voiceName: 'Vitor (Voz Neural Masculina Confiante)',
-        provider: 'Neural Voice Engine v2',
-        language: 'pt-BR',
-        speed: 1.05,
-        pitch: 0.95,
-        interruptionSensitivity: 'NORMAL'
-      },
-      behavior: {
-        openingMessage: 'Olá! Bem-vindo à Vozly. Sou o Vitor. Você gostaria de conhecer nossos agentes de voz ou agendar uma reunião comercial?',
-        fallbackMessage: 'Perfeito, vou conectar você diretamente com um dos nossos consultores de negócios.',
-        closingMessage: 'Agradecemos o seu interesse na Vozly! Entraremos em contato em breve.',
-        transferPolicy: {
-          enabled: true,
-          destinationNumber: '+5511999887766',
-          department: 'Mesa Comercial de Vendas'
-        },
-        collectSummary: true
-      },
-      telephony: {
-        phoneNumberId: 'ph-02',
-        phoneNumber: '(11) 3003-2211',
-        businessHours: '09:00 - 18:00',
-        afterHoursBehavior: 'TRANSFER'
-      },
-      knowledgeItemIds: ['kn-01', 'kn-04'],
-      tools: [
-        { toolKey: 'knowledge.search', toolName: 'Consultar Conhecimento', enabled: true, implementationType: 'NATIVE' },
-        { toolKey: 'conversation.collect', toolName: 'Coletar Informações', enabled: true, implementationType: 'NATIVE' },
-        { toolKey: 'call.transfer', toolName: 'Transferir Atendimento', enabled: true, implementationType: 'NATIVE' },
-        { toolKey: 'http.webhook', toolName: 'Webhook Zendesk', enabled: true, implementationType: 'INTEGRATION_OPERATION', connectionId: 'conn-02' }
-      ],
-      createdAt: '2026-10-25T10:00:00Z',
-      updatedAt: '2026-11-08T19:00:00Z',
-      metrics: {
-        totalCalls: 642,
-        completedCalls: 532,
-        transferredCalls: 74,
-        resolutionRate: 88.5,
-        avgDurationSeconds: 180
-      }
-    },
-    {
-      id: 'ag-03',
-      name: 'Larissa — Agendamentos & Confirmações',
-      description: 'Agente especializada em confirmação ativa de presenças, reagendamento de consultas e avisos de lembretes telefônicos.',
-      status: 'DRAFT',
-      language: 'pt-BR',
-      draftRevision: 2,
-      currentPublishedVersion: null,
-      instructions: `Você é Larissa, responsável por agendamentos e lembretes amigáveis por telefone.`,
-      voiceConfig: {
-        voiceId: 'pt-BR-Wavenet-Larissa',
-        voiceName: 'Larissa (Voz Neural Feminina Suave)',
-        provider: 'Neural Voice Engine v2',
-        language: 'pt-BR',
-        speed: 0.98,
-        pitch: 1.0,
-        interruptionSensitivity: 'NORMAL'
-      },
-      behavior: {
-        openingMessage: 'Olá! Sou a Larissa da equipe de agendamentos. Gostaria de confirmar seu horário?',
-        fallbackMessage: 'Sem problemas, vou transferir para a recepção verificar as opções.',
-        closingMessage: 'Seu agendamento está confirmado! Até logo.',
-        transferPolicy: {
-          enabled: true,
-          destinationNumber: '',
-          department: 'Recepção'
-        },
-        collectSummary: true
-      },
-      telephony: {
-        phoneNumberId: '',
-        phoneNumber: '',
-        businessHours: '08:00 - 17:00',
-        afterHoursBehavior: 'CLOSING_MESSAGE'
-      },
-      knowledgeItemIds: ['kn-03'],
-      tools: [
-        { toolKey: 'knowledge.search', toolName: 'Consultar Conhecimento', enabled: true, implementationType: 'NATIVE' },
-        { toolKey: 'conversation.collect', toolName: 'Coletar Informações', enabled: true, implementationType: 'NATIVE' }
-      ],
-      createdAt: '2026-11-04T16:00:00Z',
-      updatedAt: '2026-11-09T11:00:00Z',
-      metrics: {
-        totalCalls: 0,
-        completedCalls: 0,
-        transferredCalls: 0,
-        resolutionRate: 0,
-        avgDurationSeconds: 0
-      }
-    }
-  ]);
+  readonly agents = signal<Agent[]>([]);
 
   // ==========================================
   // CHAMADAS E CONVERSAS RECENTES (HISTÓRICO)
   // Conforme docs/08 e docs/09
   // ==========================================
-  readonly calls = signal<Call[]>([
-    {
-      id: 'call-0192f6e0-8d5b-7c11-c001',
-      callerNumber: '+55 (11) 98452-1102',
-      agentId: 'ag-01',
-      agentName: 'Helena — Atendimento Principal',
-      agentVersion: 2,
-      phoneNumber: '(11) 4003-8899',
-      direction: 'INBOUND',
-      status: 'IN_PROGRESS',
-      outcome: 'RESOLVED',
-      startedAt: 'Há 2 minutos',
-      durationSeconds: 124,
-      sentiment: 'POSITIVE',
-      toolsExecuted: ['knowledge.search', 'conversation.collect'],
-      summary: 'Cliente solicitou orientações para emissão de 2ª via de fatura e recebeu código de barras via SMS.',
-      messages: [
-        {
-          sequence: 1,
-          role: 'assistant',
-          content: 'Olá! Sou a Helena, assistente virtual da Vozly. Como posso ajudar você hoje?',
-          timestamp: '18:42:10'
-        },
-        {
-          sequence: 2,
-          role: 'user',
-          content: 'Oi Helena, boa noite! Preciso da segunda via da minha fatura que vence amanhã.',
-          timestamp: '18:42:16'
-        },
-        {
-          sequence: 3,
-          role: 'assistant',
-          content: 'Com certeza! Pode me informar o CNPJ ou CPF cadastrado na sua conta, por gentileza?',
-          timestamp: '18:42:20',
-          toolCall: {
-            toolKey: 'knowledge.search',
-            inputSummary: 'segunda via boleto fatura regras',
-            outputSummary: 'Recuperado item kn-02 (Relevância: 98%)',
-            executionTimeMs: 140
-          }
-        },
-        {
-          sequence: 4,
-          role: 'user',
-          content: 'Claro, é o CPF 123.456.789-00.',
-          timestamp: '18:42:28'
-        },
-        {
-          sequence: 5,
-          role: 'assistant',
-          content: 'Localizei sua fatura de R$ 349,00 referente a Novembro. Deseja que eu envie o código PIX copia e cola para o seu número?',
-          timestamp: '18:42:32',
-          toolCall: {
-            toolKey: 'http.rest',
-            inputSummary: 'POST /v2/faturas/buscar { cpf: "123.456.789-00" }',
-            outputSummary: 'Status 200 OK — Fatura ativa encontrada',
-            executionTimeMs: 310
-          }
-        }
-      ]
-    },
-    {
-      id: 'call-0192f6e0-8d5b-7c11-c002',
-      callerNumber: '+55 (19) 99120-4491',
-      agentId: 'ag-01',
-      agentName: 'Helena — Atendimento Principal',
-      agentVersion: 2,
-      phoneNumber: '(11) 4003-8899',
-      direction: 'INBOUND',
-      status: 'COMPLETED',
-      outcome: 'RESOLVED',
-      startedAt: 'Há 18 minutos',
-      endedAt: 'Há 15 minutos',
-      durationSeconds: 178,
-      sentiment: 'POSITIVE',
-      toolsExecuted: ['knowledge.search', 'call.end'],
-      summary: 'Dúvidas sobre horários de funcionamento e agendamento de suporte técnico presencial.',
-      messages: [
-        {
-          sequence: 1,
-          role: 'assistant',
-          content: 'Olá! Sou a Helena, assistente virtual da Vozly. Como posso ajudar você hoje?',
-          timestamp: '18:25:00'
-        },
-        {
-          sequence: 2,
-          role: 'user',
-          content: 'Boa noite. Vocês atendem presencialmente aos sábados?',
-          timestamp: '18:25:08'
-        },
-        {
-          sequence: 3,
-          role: 'assistant',
-          content: 'Nosso atendimento presencial ocorre de segunda a sexta, das 8h às 18h. Aos sábados nosso suporte opera exclusivamente via telefone de plantão 24h.',
-          timestamp: '18:25:12'
-        }
-      ]
-    },
-    {
-      id: 'call-0192f6e0-8d5b-7c11-c003',
-      callerNumber: '+55 (21) 97600-8822',
-      agentId: 'ag-01',
-      agentName: 'Helena — Atendimento Principal',
-      agentVersion: 2,
-      phoneNumber: '(11) 4003-8899',
-      direction: 'INBOUND',
-      status: 'TRANSFERRED',
-      outcome: 'TRANSFERRED_HUMAN',
-      startedAt: 'Há 45 minutos',
-      endedAt: 'Há 41 minutos',
-      durationSeconds: 240,
-      sentiment: 'NEUTRAL',
-      toolsExecuted: ['call.transfer'],
-      summary: 'Cliente solicitou negociação de dívida em aberto. Transferido com sucesso para equipe financeira humana.',
-      messages: [
-        {
-          sequence: 1,
-          role: 'assistant',
-          content: 'Olá! Sou a Helena, assistente virtual da Vozly. Como posso ajudar?',
-          timestamp: '18:00:10'
-        },
-        {
-          sequence: 2,
-          role: 'user',
-          content: 'Preciso falar com alguém sobre renegociação de valores com desconto.',
-          timestamp: '18:00:18'
-        },
-        {
-          sequence: 3,
-          role: 'assistant',
-          content: 'Entendi perfeitamente. Para condições especiais de renegociação, estou transferindo você para nosso setor financeiro.',
-          timestamp: '18:00:23',
-          toolCall: {
-            toolKey: 'call.transfer',
-            inputSummary: '{ reason: "Renegociação de valores", department: "Financeiro" }',
-            outputSummary: 'Transferência aceita no ramal 987654321',
-            executionTimeMs: 220
-          }
-        }
-      ]
-    },
-    {
-      id: 'call-0192f6e0-8d5b-7c11-c004',
-      callerNumber: '+55 (31) 98833-2211',
-      agentId: 'ag-02',
-      agentName: 'Vitor — Vendas & Leads',
-      agentVersion: 1,
-      phoneNumber: '(11) 3003-2211',
-      direction: 'INBOUND',
-      status: 'COMPLETED',
-      outcome: 'RESOLVED',
-      startedAt: 'Há 1 hora',
-      endedAt: 'Há 56 minutos',
-      durationSeconds: 210,
-      sentiment: 'POSITIVE',
-      toolsExecuted: ['conversation.collect', 'http.webhook'],
-      summary: 'Lead qualificado com 40 colaboradores interessado em automatizar chamadas de agendamento.',
-      messages: [
-        {
-          sequence: 1,
-          role: 'assistant',
-          content: 'Olá! Sou o Vitor da Vozly. Como posso ajudar com sua operação de voz?',
-          timestamp: '17:45:00'
-        },
-        {
-          sequence: 2,
-          role: 'user',
-          content: 'Vi a apresentação de vocês e temos uma clínica que recebe 3 mil chamadas por mês.',
-          timestamp: '17:45:12'
-        }
-      ]
-    },
-    {
-      id: 'call-0192f6e0-8d5b-7c11-c005',
-      callerNumber: '+55 (41) 99911-3344',
-      agentId: 'ag-01',
-      agentName: 'Helena — Atendimento Principal',
-      agentVersion: 2,
-      phoneNumber: '(11) 4003-8899',
-      direction: 'INBOUND',
-      status: 'COMPLETED',
-      outcome: 'CALLBACK_REQUESTED',
-      startedAt: 'Há 2 horas',
-      endedAt: 'Há 1 hora e 58 minutos',
-      durationSeconds: 95,
-      sentiment: 'NEUTRAL',
-      toolsExecuted: ['call.request_callback'],
-      summary: 'Cliente pediu retorno de ligação no período da manhã de amanhã.',
-      messages: []
-    }
-  ]);
+  readonly calls = signal<Call[]>([]);
 
   // ==========================================
   // INDICADORES DE USO E CONSUMO
   // Conforme docs/08 e docs/09
   // ==========================================
   readonly usage = signal<UsageMetric>({
-    totalMinutesUsed: 3420,
-    monthlyMinutesLimit: 10000,
-    concurrentPeakChannels: 8,
-    concurrentChannelsLimit: 15,
-    totalCallsMonth: 1926,
-    toolExecutionsCount: 3140,
-    dailyUsage: [
-      { date: '03 Nov', minutes: 410, calls: 230 },
-      { date: '04 Nov', minutes: 520, calls: 290 },
-      { date: '05 Nov', minutes: 480, calls: 265 },
-      { date: '06 Nov', minutes: 610, calls: 340 },
-      { date: '07 Nov', minutes: 590, calls: 320 },
-      { date: '08 Nov', minutes: 380, calls: 215 },
-      { date: '09 Nov', minutes: 430, calls: 266 }
-    ]
+    totalMinutesUsed: 0,
+    monthlyMinutesLimit: 0,
+    concurrentPeakChannels: 0,
+    concurrentChannelsLimit: 0,
+    totalCallsMonth: 0,
+    toolExecutionsCount: 0,
+    dailyUsage: []
   });
 
   // ==========================================
   // TRILHA DE AUDITORIA (SEGURANÇA & GOVERNANÇA)
   // Conforme docs/08-modelo-relacional-e-persistencia.md
   // ==========================================
-  readonly auditEvents = signal<AuditEvent[]>([
-    {
-      id: 'aud-01',
-      actor: 'Jordan Silveira',
-      actorRole: 'ADMIN',
-      action: 'AGENT_PUBLISHED',
-      resourceType: 'AGENT',
-      resourceId: 'ag-01',
-      occurredAt: '2026-11-09T17:30:00Z',
-      correlationId: 'cor-9872134',
-      metadataSafe: {
-        agentName: 'Helena — Atendimento Principal & SAC',
-        versionPublished: 2,
-        draftRevisionMerged: 6
-      }
-    },
-    {
-      id: 'aud-02',
-      actor: 'Jordan Silveira',
-      actorRole: 'ADMIN',
-      action: 'CONNECTION_VALIDATED',
-      resourceType: 'CONNECTION',
-      resourceId: 'conn-01',
-      occurredAt: '2026-11-09T18:30:00Z',
-      correlationId: 'cor-9872140',
-      metadataSafe: {
-        connectionName: 'API do CRM Principal',
-        statusResult: 'CONNECTED',
-        authType: 'BEARER_TOKEN'
-      }
-    },
-    {
-      id: 'aud-03',
-      actor: 'Camila Albuquerque',
-      actorRole: 'OWNER',
-      action: 'KNOWLEDGE_ITEM_CREATED',
-      resourceType: 'KNOWLEDGE',
-      resourceId: 'kn-01',
-      occurredAt: '2026-11-08T15:20:00Z',
-      correlationId: 'cor-9871020',
-      metadataSafe: {
-        title: 'Políticas de Atendimento e Horários',
-        type: 'FAQ'
-      }
-    },
-    {
-      id: 'aud-04',
-      actor: 'Lucas Nogueira',
-      actorRole: 'OPERATOR',
-      action: 'CALL_INSPECTED',
-      resourceType: 'AGENT',
-      resourceId: 'call-0192f6e0-8d5b-7c11-c003',
-      occurredAt: '2026-11-09T18:05:00Z',
-      correlationId: 'cor-9872166',
-      metadataSafe: {
-        outcome: 'TRANSFERRED_HUMAN',
-        agent: 'Helena'
-      }
-    }
-  ]);
+  readonly auditEvents = signal<AuditEvent[]>([]);
 
   // ==========================================
   // FILTROS & ESTADO GLOBAL DE PESQUISA
@@ -750,7 +192,7 @@ Converse de forma engajada, demonstrando valor e fazendo perguntas de qualifica�
 
   readonly averageResolutionRate = computed(() => {
     const active = this.agents().filter(a => a.metrics.totalCalls > 0);
-    if (active.length === 0) return 94.2;
+    if (active.length === 0) return 0;
     const sum = active.reduce((acc, curr) => acc + curr.metrics.resolutionRate, 0);
     return Math.round((sum / active.length) * 10) / 10;
   });
