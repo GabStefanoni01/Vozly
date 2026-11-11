@@ -3,6 +3,7 @@ FROM node:22.13.1-alpine AS build
 WORKDIR /workspace/frontend
 
 COPY frontend/package*.json ./
+RUN npm install --global npm@11.17.0
 # npm install is intentional while package.json and package-lock.json are being aligned.
 RUN npm install --no-audit --no-fund
 
