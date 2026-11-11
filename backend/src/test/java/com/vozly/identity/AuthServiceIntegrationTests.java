@@ -98,6 +98,19 @@ class AuthServiceIntegrationTests {
     }
 
     @Test
+    void registrationRejectsDuplicateEmailRegardlessOfCaseOrWhitespace() {
+        authService.register("Gabriel", "Gabriel@Example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+
+        assertThatThrownBy(() -> authService.register(
+                "Another Name", "  gabriel@example.com  ", "another-strong-password",
+                "Another Workspace", null, null))
+                .isInstanceOf(AuthService.EmailAlreadyRegisteredException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.users", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.tenants", Integer.class)).isEqualTo(1);
+    }
+
+    @Test
     void authenticatedIdentityReturnsDatabaseProfileAndJwtTenantContext() {
         AuthService.AuthResult registered = authService.register(
                 "Gabriel Stefanoni", "gabriel@example.com", "a-very-strong-password",
