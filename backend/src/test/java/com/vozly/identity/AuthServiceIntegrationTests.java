@@ -98,6 +98,61 @@ class AuthServiceIntegrationTests {
     }
 
     @Test
+    void authenticatedIdentityReturnsDatabaseProfileAndJwtTenantContext() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel Stefanoni", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+        Jwt jwt = Jwt.withTokenValue("test-token")
+                .header("alg", "HS256")
+                .subject(registered.userId().toString())
+                .claim("tenant_id", registered.tenantId().toString())
+                .claim("role", registered.role())
+                .build();
+
+        var identity = authController.me(jwt);
+
+        assertThat(identity)
+                .containsEntry("userId", registered.userId().toString())
+                .containsEntry("tenantId", registered.tenantId().toString())
+                .containsEntry("role", "OWNER")
+                .containsEntry("name", "Gabriel Stefanoni")
+                .containsEntry("email", "gabriel@example.com");
+    }
+
+    @Test
+    void authenticatedIdentityRejectsDisabledUser() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+        jdbc.update("UPDATE vozly.users SET status = 'DISABLED' WHERE id = ?", registered.userId());
+        Jwt jwt = Jwt.withTokenValue("test-token")
+                .header("alg", "HS256")
+                .subject(registered.userId().toString())
+                .claim("tenant_id", registered.tenantId().toString())
+                .claim("role", registered.role())
+                .build();
+
+        assertThatThrownBy(() -> authController.me(jwt))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void databasePreventsAUserFromJoiningASecondWorkspace() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+        java.util.UUID secondTenantId = java.util.UUID.randomUUID();
+        jdbc.update("INSERT INTO vozly.tenants (id, name, slug) VALUES (?, ?, ?)",
+                secondTenantId, "Second Workspace", "second-workspace");
+
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO vozly.memberships (id, tenant_id, user_id, role)
+                VALUES (?, ?, ?, 'OWNER')
+                """, java.util.UUID.randomUUID(), secondTenantId, registered.userId()))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    }
+
+    @Test
     void refreshRotatesTokenAndLogoutRevokesIt() {
         AuthService.AuthResult registered = authService.register(
                 "Gabriel", "gabriel@example.com", "a-very-strong-password",
