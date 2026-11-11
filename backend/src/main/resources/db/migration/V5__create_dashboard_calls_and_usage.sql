@@ -73,6 +73,7 @@ CREATE TABLE vozly.calls (
     answered_at TIMESTAMPTZ,
     ended_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_calls_tenant_id UNIQUE (tenant_id, id),
     CONSTRAINT uq_calls_provider_ref UNIQUE (provider_key, provider_call_ref),
     CONSTRAINT fk_calls_agent FOREIGN KEY (tenant_id, agent_id)
         REFERENCES vozly.agents(tenant_id, id),
