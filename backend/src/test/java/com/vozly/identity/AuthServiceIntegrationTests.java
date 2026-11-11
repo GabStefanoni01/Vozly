@@ -8,6 +8,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.Mockito.verify;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,6 +22,8 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class AuthServiceIntegrationTests {
     @Autowired AuthService authService;
+    @Autowired PasswordResetService passwordResetService;
+    @MockitoBean JavaMailSender mailSender;
     @Autowired AuthController authController;
     @Autowired JdbcTemplate jdbc;
     @Autowired org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
@@ -24,6 +31,7 @@ class AuthServiceIntegrationTests {
     @BeforeEach
     void prepareSchema() {
         jdbc.execute("CREATE SCHEMA IF NOT EXISTS vozly");
+        jdbc.execute("DROP TABLE IF EXISTS vozly.password_reset_tokens");
         jdbc.execute("DROP TABLE IF EXISTS vozly.refresh_token_sessions");
         jdbc.execute("DROP TABLE IF EXISTS vozly.external_identities");
         jdbc.execute("DROP TABLE IF EXISTS vozly.memberships");
