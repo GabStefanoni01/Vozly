@@ -9,12 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
 class AuthServiceIntegrationTests {
     @Autowired AuthService authService;
+    @Autowired AuthController authController;
     @Autowired JdbcTemplate jdbc;
     @Autowired org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
@@ -47,7 +50,7 @@ class AuthServiceIntegrationTests {
                     user_id UUID NOT NULL REFERENCES vozly.users(id), role VARCHAR(20) NOT NULL,
                     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    CONSTRAINT uq_memberships_tenant_user UNIQUE (tenant_id, user_id))
+                    CONSTRAINT uq_memberships_tenant_user UNIQUE (tenant_id, user_id),\n                    CONSTRAINT uq_memberships_single_workspace_per_user UNIQUE (user_id))
                 """);
         jdbc.execute("""
                 CREATE TABLE vozly.external_identities (
