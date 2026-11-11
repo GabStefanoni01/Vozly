@@ -105,6 +105,22 @@ export class ApiAuthService {
     this.accessToken = result.accessToken;
   }
 
+  async requestPasswordReset(email: string): Promise<void> {
+    const csrf = await this.getCsrfToken();
+    await firstValueFrom(this.http.post(
+      `${this.baseUrl}/api/v1/auth/password/forgot`, { email },
+      { withCredentials: true, headers: new HttpHeaders({ 'X-XSRF-TOKEN': csrf }) }
+    ));
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const csrf = await this.getCsrfToken();
+    await firstValueFrom(this.http.post(
+      `${this.baseUrl}/api/v1/auth/password/reset`, { token, newPassword },
+      { withCredentials: true, headers: new HttpHeaders({ 'X-XSRF-TOKEN': csrf }) }
+    ));
+  }
+
   async logout(): Promise<void> {
     const csrf = await firstValueFrom(this.http.get<{ token: string }>(
       `${this.baseUrl}/api/v1/auth/csrf`, { withCredentials: true }
