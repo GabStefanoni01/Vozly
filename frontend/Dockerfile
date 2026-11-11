@@ -4,8 +4,8 @@ WORKDIR /workspace/frontend
 
 COPY frontend/package*.json ./
 RUN npm install --global npm@11.17.0
-# npm install is intentional while package.json and package-lock.json are being aligned.
-RUN npm install --no-audit --no-fund
+# package-lock.json is aligned with package.json: use reproducible installs.
+RUN npm ci --no-audit --no-fund
 
 COPY frontend/ ./
 RUN npm run build -- --configuration production

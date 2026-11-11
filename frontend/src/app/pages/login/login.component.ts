@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiAuthService } from '../../services/api-auth.service';
+import { safeReturnUrl } from '../../core/auth/auth.guard';
 
 @Component({
   selector: 'app-login',
@@ -565,7 +566,10 @@ export class LoginComponent {
   mensagem: string | null = null;
   tipoMensagem: 'erro' | 'sucesso' = 'erro';
 
+  private readonly returnUrl: string;
+
   constructor(private router: Router, private auth: ApiAuthService, route: ActivatedRoute) {
+    this.returnUrl = safeReturnUrl(route.snapshot.queryParamMap.get('returnUrl'));
     if (route.snapshot.queryParamMap.get('error') === 'microsoft_sso_failed') {
       this.tipoMensagem = 'erro';
       this.mensagem = 'Não foi possível entrar com a Microsoft. Tente novamente ou use seu e-mail e senha.';
@@ -589,7 +593,7 @@ export class LoginComponent {
     this.carregando = true;
     try {
       await this.auth.login(this.email.trim(), this.senha);
-      await this.router.navigate(['/']);
+      await this.router.navigateByUrl(this.returnUrl);
     } catch {
       this.tipoMensagem = 'erro';
       this.mensagem = 'Não foi possível entrar. Confira seu e-mail e senha e tente novamente.';

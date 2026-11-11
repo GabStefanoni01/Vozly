@@ -81,13 +81,41 @@ O Blueprint gera `VOZLY_JWT_SECRET` automaticamente. Não substitua por um valor
 
 O arquivo Blueprint usa `autoDeployTrigger: off`: novos commits não devem disparar deploy automaticamente. A criação inicial dos recursos pelo Blueprint ainda exige confirmação no painel Render.
 
+## Ambiente de desenvolvimento publicado (devvozly)
+
+Enquanto o Blueprint Docker acima não é aplicado, existe um ambiente de **desenvolvimento** publicado no Render:
+
+| Serviço | URL | Origem |
+|---|---|---|
+| Frontend (static site) | `https://devvozly-zxlh.onrender.com` | Branch `deploy/dev-dashboard`, Blueprint próprio (`render.yaml` daquela branch) |
+| Backend (web service) | `https://vozly.onrender.com` | Spring Boot com `FRONTEND_URL=https://devvozly-zxlh.onrender.com` |
+
+O static site reproduz o papel do Nginx com *rewrites* do Render, na ordem abaixo, mantendo a API **same-origin** para o navegador (cookies `SameSite=Strict` do refresh token e CSRF continuam funcionando):
+
+```yaml
+routes:
+  - { type: rewrite, source: /api/*,          destination: https://vozly.onrender.com/api/* }
+  - { type: rewrite, source: /actuator/*,     destination: https://vozly.onrender.com/actuator/* }
+  - { type: rewrite, source: /oauth2/*,       destination: https://vozly.onrender.com/oauth2/* }
+  - { type: rewrite, source: /login/oauth2/*, destination: https://vozly.onrender.com/login/oauth2/* }
+  - { type: rewrite, source: /*,              destination: /index.html }   # fallback do Angular
+```
+
+O build de produção usa `environment.prod.ts` (`apiUrl: ''`), então o mesmo artefato funciona atrás do Nginx ou dos rewrites. A branch `deploy/dev-dashboard` só difere da linha principal pelo `render.yaml` do static site; não integre esse arquivo na `develop`, que mantém o Blueprint Docker.
+
+Requisitos no backend para este ambiente:
+
+- `FRONTEND_URL` deve ser exatamente `https://devvozly-zxlh.onrender.com` (allowlist de CORS — o navegador envia `Origin` desse domínio nos POSTs).
+- `COOKIE_SECURE=true` e HTTPS.
+- Microsoft SSO: registrar no Entra ID o redirect URI que o backend gerar para este ambiente e validar o fluxo antes de divulgá-lo.
+
 ## Decisões e limites atuais
 
 - O backend usa `PORT`, definido como `8080` no Blueprint e no Compose.
 - O Nginx usa `PORT=10000` no Render e no container.
 - O build Angular de produção substitui o ambiente local e usa URL relativa da API. O ambiente de desenvolvimento continua apontando para `http://localhost:8080`.
 - `server.forward-headers-strategy=framework` permite que Spring interprete os cabeçalhos encaminhados pelo Nginx/Render no fluxo OAuth.
-- O Dockerfile do frontend usa temporariamente `npm install`, pois o lockfile atual ainda precisa ser alinhado às versões declaradas no `package.json`. Depois de sincronizar o lockfile, deve-se trocar por `npm ci`.
+- O `package-lock.json` está alinhado ao `package.json` (Angular 21) e o Dockerfile do frontend usa `npm ci` para instalações reproduzíveis.
 - O Dockerfile do backend compila o JAR com Maven e o executa em uma imagem JRE, sem incluir Maven no runtime.
 - Esta configuração não cria banco no Render, não migra dados do Neon e não cadastra segredos ou domínios automaticamente.
 - Nenhum deploy foi executado por esta alteração.
