@@ -170,8 +170,8 @@ public class DashboardController {
         }
         Duration period = Duration.between(start, end);
         Instant previousStart = start.minus(period);
-        CallCounters current = counters(tenantId, start, end);
-        CallCounters previous = counters(tenantId, previousStart, start);
+        CallCounters current = counters(tenantId, java.sql.Timestamp.from(start), java.sql.Timestamp.from(end));
+        CallCounters previous = counters(tenantId, java.sql.Timestamp.from(previousStart), java.sql.Timestamp.from(start));
         long inProgress = jdbc.queryForObject("""
                 SELECT COUNT(*) FROM vozly.calls
                 WHERE tenant_id = ? AND status IN ('ACTIVE', 'TRANSFERRING')
@@ -182,7 +182,7 @@ public class DashboardController {
                 FROM vozly.calls
                 WHERE tenant_id = ? AND started_at >= ? AND started_at < ? AND answered_at IS NOT NULL
                 """, (rs, n) -> new DurationSummary(rs.getLong("total"), rs.getDouble("average")),
-                tenantId, start, end);
+                tenantId, java.sql.Timestamp.from(start), java.sql.Timestamp.from(end));
         List<EndReasonCount> reasons = jdbc.query("""
                 SELECT end_reason, COUNT(*) AS total
                 FROM vozly.calls
@@ -211,7 +211,8 @@ public class DashboardController {
                 FROM days LEFT JOIN daily USING (day)
                 ORDER BY days.day
                 """, (rs, n) -> new DailyUsage(rs.getString("date"), rs.getLong("calls"),
-                    rs.getDouble("minutes")), start, end, tenantId, start, end);
+                    rs.getDouble("minutes")), java.sql.Timestamp.from(start), java.sql.Timestamp.from(end), tenantId,
+                java.sql.Timestamp.from(start), java.sql.Timestamp.from(end));
 
         return new UsageSummaryResponse(
                 new Period(from.withOffsetSameInstant(ZoneOffset.UTC), to.withOffsetSameInstant(ZoneOffset.UTC)),
@@ -227,7 +228,7 @@ public class DashboardController {
                 FROM vozly.calls
                 WHERE tenant_id = ? AND started_at >= ? AND started_at < ?
                 """, (rs, n) -> new CallCounters(rs.getLong("total"), rs.getLong("completed"),
-                    rs.getLong("transferred"), rs.getLong("failed")), tenantId, from, to);
+                    rs.getLong("transferred"), rs.getLong("failed")), tenantId, java.sql.Timestamp.from(from), java.sql.Timestamp.from(to));
     }
 
     private boolean exists(String sql, UUID tenantId) {
