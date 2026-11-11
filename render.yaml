@@ -5,7 +5,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: .
-    autoDeploy: false
+    autoDeployTrigger: off
     envVars:
       - key: PORT
         value: "8080"
@@ -38,7 +38,7 @@ services:
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: .
     healthCheckPath: /healthz
-    autoDeploy: false
+    autoDeployTrigger: off
     envVars:
       - key: PORT
         value: "10000"
