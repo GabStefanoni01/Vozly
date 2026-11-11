@@ -30,6 +30,7 @@ import { IconComponent } from '../../ui/icon/icon.component';
             <li><a href="#aplicacoes" class="nav-link">Aplicações</a></li>
             <li><a href="#painel" class="nav-link">Painel</a></li>
             <li><a href="#sobre" class="nav-link">Sobre</a></li>
+            <li><a routerLink="/blog" class="nav-link">Blog</a></li>
           </ul>
         </nav>
 
@@ -92,6 +93,12 @@ import { IconComponent } from '../../ui/icon/icon.component';
               <a href="#sobre" (click)="closeMobileMenu()" class="mobile-nav-link">
                 <app-icon name="shield-check" [size]="18" color="#A855F7"></app-icon>
                 Sobre
+              </a>
+            </li>
+            <li>
+              <a routerLink="/blog" (click)="closeMobileMenu()" class="mobile-nav-link">
+                <app-icon name="book-open" [size]="18" color="#A855F7"></app-icon>
+                Blog & Insights
               </a>
             </li>
           </ul>
