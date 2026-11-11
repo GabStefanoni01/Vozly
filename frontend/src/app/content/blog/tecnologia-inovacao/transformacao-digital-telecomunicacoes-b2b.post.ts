@@ -9,16 +9,16 @@ export const postTransformacaoDigitalTelecom: BlogPost = {
     'A rejeição histórica dos consumidores a menus eletrônicos intermináveis do tipo "digite 1" impulsiona a maior virada de infraestrutura de voz em 20 anos. O atendimento telefônico agora é conversacional, proativo e integrado aos sistemas de negócio.',
   categorySlug: 'tecnologia-inovacao',
   categoryName: 'Tecnologia & Inovação',
-  coverImage: '/blog/covers/cover-telecom-transformation.svg',
-  coverImageAlt: 'Gráfico tridimensional demonstrando crescimento de produtividade com IA conversacional em telecomunicações',
-  coverImageCredit: 'Vozly Business Research & Market Insights',
-  coverImageLicense: 'Vozly Proprietary CC-BY 4.0 Creative Commons',
+  coverImage: '/blog/covers/telecom-b2b-callcenter.jpg',
+  coverImageAlt: 'Atendente com headset trabalhando em uma central de atendimento',
+  coverImageCredit: 'MÁV Zrt. / Wikimedia Commons',
+  coverImageLicense: 'CC BY-SA 3.0',
   author: {
-    id: 'editorial-vozly',
-    name: 'Redação Vozly Insights',
-    role: 'Jornalismo de Tecnologia & Negócios',
-    avatarUrl: '/brand/vozly-app-icon.png',
-    bio: 'Jornalistas e pesquisadores dedicados à cobertura das transformações tecnológicas nos negócios e na economia digital.'
+    id: 'equipe-vozly',
+    name: 'Equipe Vozly',
+    role: 'Vozly Insights',
+    avatarUrl: '/brand/vozly-app-icon-trim.png',
+    bio: 'Textos escritos pela equipe da Vozly sobre agentes de voz, inteligência artificial e telecomunicações.'
   },
   publishedAt: '2026-10-15T09:00:00Z',
   publishedAtFormatted: '15 de Outubro de 2026',
@@ -96,9 +96,9 @@ export const postTransformacaoDigitalTelecom: BlogPost = {
   ],
   sources: [
     {
-      title: 'Relatório Anual de Telecomunicações Empresariais 2025/2026',
-      publication: 'Instituto Brasileiro de Inteligência em Telecom',
-      date: '2026'
+      title: 'Painéis de Dados da Anatel',
+      url: 'https://www.gov.br/anatel/pt-br/dados/paineis-de-dados',
+      publication: 'Agência Nacional de Telecomunicações (Anatel)'
     }
   ]
 };

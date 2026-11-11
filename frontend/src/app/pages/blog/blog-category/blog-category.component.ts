@@ -8,367 +8,84 @@ import { SeoService } from '../../../services/seo.service';
 import { BlogHeaderComponent } from '../../../components/blog/blog-header/blog-header.component';
 import { BlogPostCardComponent } from '../../../components/blog/blog-post-card/blog-post-card.component';
 import { BlogFeaturedCardComponent } from '../../../components/blog/blog-featured-card/blog-featured-card.component';
-import { BlogNewsletterComponent } from '../../../components/blog/blog-newsletter/blog-newsletter.component';
 import { BlogFooterComponent } from '../../../components/blog/blog-footer/blog-footer.component';
-import { IconComponent } from '../../../components/ui/icon/icon.component';
 
 @Component({
   selector: 'app-blog-category',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    BlogHeaderComponent,
-    BlogPostCardComponent,
-    BlogFeaturedCardComponent,
-    BlogNewsletterComponent,
-    BlogFooterComponent,
-    IconComponent
-  ],
+  imports: [CommonModule, RouterLink, BlogHeaderComponent, BlogPostCardComponent, BlogFeaturedCardComponent, BlogFooterComponent],
   template: `
-    <div class="category-page-wrapper">
+    <div class="bp">
       <app-blog-header [categories]="allCategories" (search)="onSearch($event)"></app-blog-header>
 
-      <main class="category-main">
-        <div class="blog-container">
-          <!-- Breadcrumb Navigation -->
-          <nav class="breadcrumb-bar" aria-label="Breadcrumb">
-            <ol class="breadcrumb-list">
-              <li><a routerLink="/" class="crumb-link">Início</a></li>
-              <li class="crumb-separator">/</li>
-              <li><a routerLink="/blog" class="crumb-link">Blog</a></li>
-              <li class="crumb-separator">/</li>
-              <li class="crumb-current" aria-current="page">{{ category?.name }}</li>
-            </ol>
-          </nav>
+      <main class="bp-wrap">
+        <header *ngIf="category" class="cat-head">
+          <h1 class="cat-title">{{ category.name }}</h1>
+          <p class="cat-desc">{{ category.longDescription }}</p>
+          <span class="cat-count">{{ categoryPosts.length }} {{ categoryPosts.length === 1 ? 'publicação' : 'publicações' }}</span>
+        </header>
 
-          <!-- Category Hero Banner -->
-          <header *ngIf="category" class="category-hero">
-            <div class="category-badge-pill">
-              <app-icon [name]="category.icon" [size]="16" color="#C084FC"></app-icon>
-              <span>{{ category.badgeLabel }}</span>
-            </div>
-
-            <h1 class="category-title">{{ category.name }}</h1>
-            <p class="category-description">{{ category.longDescription }}</p>
-
-            <div class="category-meta-info">
-              <span class="meta-tag">{{ categoryPosts.length }} publicações disponíveis</span>
-              <span class="meta-dot">•</span>
-              <span class="meta-tag">Atualizado periodicamente pela redação</span>
-            </div>
-          </header>
-
-          <!-- Active Search within Category -->
-          <div *ngIf="isSearching" class="search-results-box">
-            <div class="search-header">
-              <h2 class="search-title">Pesquisa em {{ category?.name }}: "{{ currentSearchQuery }}"</h2>
-              <span class="search-count">{{ filteredPosts.length }} resultados</span>
-            </div>
-
-            <div class="articles-grid">
-              <app-blog-post-card *ngFor="let post of filteredPosts" [post]="post"></app-blog-post-card>
-            </div>
+        <section *ngIf="isSearching; else list" class="bp-section">
+          <h2 class="bp-label">{{ filteredPosts.length }} resultados para “{{ currentSearchQuery }}”</h2>
+          <div *ngIf="filteredPosts.length; else empty" class="bp-grid">
+            <app-blog-post-card *ngFor="let post of filteredPosts" [post]="post"></app-blog-post-card>
           </div>
+          <ng-template #empty><p class="bp-empty">Nenhum artigo encontrado nesta categoria.</p></ng-template>
+        </section>
 
-          <!-- Category Posts List -->
-          <div *ngIf="!isSearching && categoryPosts.length > 0" class="category-posts-layout">
-            <!-- First post as Category Lead (if available) -->
-            <section *ngIf="categoryPosts[0]" class="category-lead-section">
-              <span class="lead-label">Mais recente em {{ category?.name }}</span>
-              <app-blog-featured-card [post]="categoryPosts[0]"></app-blog-featured-card>
-            </section>
-
-            <!-- Remaining Category Articles Grid -->
-            <section *ngIf="categoryPosts.length > 1" class="remaining-posts-section">
-              <h2 class="remaining-heading">Outras publicações neste tema</h2>
-              <div class="articles-grid">
-                <app-blog-post-card
-                  *ngFor="let post of categoryPosts.slice(1)"
-                  [post]="post"
-                ></app-blog-post-card>
-              </div>
-            </section>
-          </div>
-
-          <!-- Explore Other Categories Strip -->
-          <section class="other-categories-section">
-            <h3 class="other-title">Explorar outros temas editoriais</h3>
-            <div class="other-grid">
-              <a
-                *ngFor="let other of otherCategories"
-                [routerLink]="['/blog', other.slug]"
-                class="other-card group"
-              >
-                <div class="other-card-header">
-                  <app-icon [name]="other.icon" [size]="20" color="#A855F7"></app-icon>
-                  <app-icon name="arrow-right" [size]="16" class="transition-transform group-hover:translate-x-1" color="#C084FC"></app-icon>
-                </div>
-                <h4 class="other-name">{{ other.name }}</h4>
-                <p class="other-desc">{{ other.description }}</p>
-              </a>
+        <ng-template #list>
+          <section *ngIf="categoryPosts.length" class="bp-section">
+            <h2 class="bp-label">Mais recente</h2>
+            <app-blog-featured-card [post]="categoryPosts[0]"></app-blog-featured-card>
+            <div *ngIf="categoryPosts.length > 1" class="bp-grid bp-grid-spaced">
+              <app-blog-post-card *ngFor="let post of categoryPosts.slice(1)" [post]="post"></app-blog-post-card>
             </div>
           </section>
+        </ng-template>
 
-          <!-- Newsletter -->
-          <section class="newsletter-wrap">
-            <app-blog-newsletter></app-blog-newsletter>
-          </section>
-        </div>
+        <section class="bp-section bp-section-ruled">
+          <h2 class="bp-label">Outras categorias</h2>
+          <div class="other-list">
+            <a *ngFor="let other of otherCategories" [routerLink]="['/blog', other.slug]" class="other">
+              <span class="other-name">{{ other.name }} →</span>
+              <span class="other-desc">{{ other.description }}</span>
+            </a>
+          </div>
+        </section>
       </main>
 
       <app-blog-footer [categories]="allCategories"></app-blog-footer>
     </div>
   `,
   styles: [`
-    .category-page-wrapper {
-      background: #060609;
-      color: #FFFFFF;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    :host { display: block; }
+    .bp { background: #08080c; color: #ededf2; min-height: 100vh; }
+    .bp-wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .cat-head { padding: 48px 0 8px; max-width: 720px; }
+    .cat-title { font-size: 36px; line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; }
+    .cat-desc { font-size: 15px; line-height: 1.65; color: #a1a1ae; margin: 0 0 12px; }
+    .cat-count { font-size: 12px; color: #7a7a88; }
+    .bp-section { padding-top: 40px; }
+    .bp-section-ruled { margin-top: 56px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+    .bp-label { font-size: 16px; font-weight: 500; color: #d4d4dc; margin: 0 0 24px; }
+    .bp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px 28px; }
+    .bp-grid-spaced { margin-top: 56px; }
+    .bp-empty { color: #8a8a98; font-size: 14px; }
+    .other-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .other {
+      display: flex; flex-direction: column; gap: 6px; padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 4px; text-decoration: none; color: inherit;
+      transition: border-color 0.2s;
     }
-
-    .category-main {
-      flex: 1;
-      padding-top: 32px;
-    }
-
-    .blog-container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    /* Breadcrumbs */
-    .breadcrumb-bar {
-      margin-bottom: 32px;
-    }
-
-    .breadcrumb-list {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      font-size: 13px;
-    }
-
-    .crumb-link {
-      color: #A1A1AA;
-      text-decoration: none;
-      transition: color 0.15s ease;
-    }
-
-    .crumb-link:hover {
-      color: #FFFFFF;
-    }
-
-    .crumb-separator {
-      color: #52525B;
-    }
-
-    .crumb-current {
-      color: #C084FC;
-      font-weight: 500;
-    }
-
-    /* Category Hero */
-    .category-hero {
-      padding: 40px 0 56px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      margin-bottom: 48px;
-    }
-
-    .category-badge-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 5px 14px;
-      border-radius: 9999px;
-      background: rgba(109, 0, 255, 0.15);
-      border: 1px solid rgba(168, 85, 247, 0.3);
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #C084FC;
-      margin-bottom: 16px;
-    }
-
-    .category-title {
-      font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
-      font-size: clamp(32px, 5vw, 48px);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: #FFFFFF;
-      margin: 0 0 16px;
-      line-height: 1.15;
-    }
-
-    .category-description {
-      font-family: var(--font-sans, 'Inter', sans-serif);
-      font-size: clamp(15px, 2vw, 17px);
-      color: #A1A1AA;
-      line-height: 1.65;
-      max-width: 760px;
-      margin: 0 0 24px;
-    }
-
-    .category-meta-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13px;
-      color: #71717A;
-    }
-
-    .meta-dot {
-      color: #3F3F46;
-    }
-
-    /* Posts Layout */
-    .category-lead-section {
-      margin-bottom: 64px;
-    }
-
-    .lead-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #A855F7;
-      margin-bottom: 12px;
-    }
-
-    .remaining-posts-section {
-      margin-bottom: 72px;
-    }
-
-    .remaining-heading {
-      font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
-      font-size: 24px;
-      font-weight: 700;
-      color: #FFFFFF;
-      margin: 0 0 28px;
-    }
-
-    .articles-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 32px;
-    }
-
-    @media (min-width: 640px) {
-      .articles-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .articles-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    /* Other Categories */
-    .other-categories-section {
-      margin-bottom: 72px;
-      padding-top: 48px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .other-title {
-      font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
-      font-size: 20px;
-      font-weight: 700;
-      color: #FFFFFF;
-      margin: 0 0 24px;
-    }
-
-    .other-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-
-    @media (min-width: 768px) {
-      .other-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .other-card {
-      background: #0E0D14;
-      border: 1px solid rgba(139, 61, 255, 0.18);
-      border-radius: 14px;
-      padding: 24px;
-      text-decoration: none;
-      transition: all 0.2s ease;
-    }
-
-    .other-card:hover {
-      background: #13111C;
-      border-color: rgba(168, 85, 247, 0.45);
-      transform: translateY(-2px);
-    }
-
-    .other-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .other-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: #FFFFFF;
-      margin: 0 0 6px;
-      transition: color 0.15s ease;
-    }
-
-    .other-card:hover .other-name {
-      color: #C084FC;
-    }
-
-    .other-desc {
-      font-size: 13px;
-      color: #A1A1AA;
-      line-height: 1.55;
-      margin: 0;
-    }
-
-    .newsletter-wrap {
-      margin-bottom: 40px;
-    }
-
-    /* Search in Category */
-    .search-results-box {
-      margin-bottom: 60px;
-    }
-
-    .search-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .search-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: #FFFFFF;
-      margin: 0;
-    }
-
-    .search-count {
-      font-size: 13px;
-      color: #A1A1AA;
+    .other:hover { border-color: rgba(139, 92, 246, 0.6); }
+    .other-name { font-size: 15px; font-weight: 500; }
+    .other-desc { font-size: 13px; color: #8a8a98; line-height: 1.5; }
+    @media (max-width: 960px) { .bp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 600px) {
+      .bp-wrap { padding: 0 16px; }
+      .cat-title { font-size: 28px; }
+      .bp-grid, .other-list { grid-template-columns: 1fr; }
+      .bp-grid { gap: 36px; }
     }
   `]
 })

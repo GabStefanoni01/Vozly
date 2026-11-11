@@ -9,16 +9,16 @@ export const postAvancosMultimodais: BlogPost = {
     'Novas pesquisas em modelos fundacionais capazes de processar áudio diretamente — sem converter fonemas em texto intermediário — prometem preservar inflexões emocionais, risos e nuances de voz. Analisamos o que já funciona em produção e quais são os limites atuais.',
   categorySlug: 'ultimas-noticias',
   categoryName: 'Últimas Notícias',
-  coverImage: '/blog/covers/cover-multimodal-ai.svg',
-  coverImageAlt: 'Representação esquemática de modelo multimodal com canais simultâneos de áudio, texto e semântica',
-  coverImageCredit: 'Vozly Editorial Desk & Technology Watch',
-  coverImageLicense: 'Vozly Proprietary CC-BY 4.0 Creative Commons',
+  coverImage: '/blog/covers/multimodal-gpu.jpg',
+  coverImageAlt: 'Chip de GPU NVIDIA GeForce em placa de vídeo com dissipadores',
+  coverImageCredit: 'Brett Samuel / Wikimedia Commons',
+  coverImageLicense: 'CC BY-SA 2.0',
   author: {
-    id: 'editorial-vozly',
-    name: 'Redação Vozly Insights',
-    role: 'Jornalismo de Tecnologia & Notícias',
-    avatarUrl: '/brand/vozly-app-icon.png',
-    bio: 'Jornalistas e analistas dedicados ao acompanhamento contínuo dos lançamentos, descobertas e movimentos da indústria global de inteligência artificial.'
+    id: 'equipe-vozly',
+    name: 'Equipe Vozly',
+    role: 'Vozly Insights',
+    avatarUrl: '/brand/vozly-app-icon-trim.png',
+    bio: 'Textos escritos pela equipe da Vozly sobre agentes de voz, inteligência artificial e telecomunicações.'
   },
   publishedAt: '2026-11-08T08:30:00Z',
   publishedAtFormatted: '08 de Novembro de 2026',
@@ -87,9 +87,10 @@ export const postAvancosMultimodais: BlogPost = {
   ],
   sources: [
     {
-      title: 'Multimodal Foundation Models: From Text to End-to-End Speech',
-      publication: 'AI Industry Research Briefing',
-      date: '2026'
+      title: 'GPT-4o System Card',
+      url: 'https://openai.com/index/gpt-4o-system-card/',
+      publication: 'OpenAI',
+      date: '2024'
     }
   ]
 };

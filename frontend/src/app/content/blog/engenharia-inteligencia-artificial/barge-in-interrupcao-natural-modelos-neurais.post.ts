@@ -9,16 +9,16 @@ export const postBargeInInterrupcao: BlogPost = {
     'O maior teste de maturidade de um agente de voz é como ele reage ao ser interrompido no meio de uma frase. Explicamos o funcionamento do cancelamento de eco acústico (AEC), a discriminação de backchannels e o esvaziamento determinístico do buffer de reprodução.',
   categorySlug: 'engenharia-inteligencia-artificial',
   categoryName: 'Engenharia & Inteligência Artificial',
-  coverImage: '/blog/covers/cover-barge-in-audio.svg',
-  coverImageAlt: 'Espectrograma de áudio visualizando interrupção de fala humana sobrepondo sinal de voz sintetizada',
-  coverImageCredit: 'Vozly Acoustic Engineering & DSP Laboratory',
-  coverImageLicense: 'Vozly Proprietary CC-BY 4.0 Creative Commons',
+  coverImage: '/blog/covers/barge-in-spectrogram.jpg',
+  coverImageAlt: 'Forma de onda e espectrograma de uma frase falada, com a transcrição das palavras',
+  coverImageCredit: 'Aaron Parecki / Wikimedia Commons',
+  coverImageLicense: 'CC BY 2.0',
   author: {
-    id: 'engenharia-ia-vozly',
-    name: 'Time de Pesquisa & IA',
-    role: 'Engenharia de Modelos & Voz Neural Vozly',
-    avatarUrl: '/brand/vozly-app-icon.png',
-    bio: 'Engenheiros e pesquisadores focados em processamento digital de sinais (DSP), acústica neural e dinâmica de turnos conversacionais.'
+    id: 'equipe-vozly',
+    name: 'Equipe Vozly',
+    role: 'Vozly Insights',
+    avatarUrl: '/brand/vozly-app-icon-trim.png',
+    bio: 'Textos escritos pela equipe da Vozly sobre agentes de voz, inteligência artificial e telecomunicações.'
   },
   publishedAt: '2026-10-31T15:30:00Z',
   publishedAtFormatted: '31 de Outubro de 2026',
@@ -113,9 +113,9 @@ export const postBargeInInterrupcao: BlogPost = {
   ],
   sources: [
     {
-      title: 'Acoustic Echo Cancellation in Full-Duplex Voice Communications',
-      publication: 'IEEE Transactions on Audio, Speech, and Language Processing',
-      date: '2023'
+      title: 'ITU-T Recommendation G.168: Digital network echo cancellers',
+      url: 'https://www.itu.int/rec/T-REC-G.168',
+      publication: 'International Telecommunication Union'
     }
   ]
 };

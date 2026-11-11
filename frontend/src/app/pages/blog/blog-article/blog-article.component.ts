@@ -7,7 +7,6 @@ import { BlogContentService } from '../../../services/blog-content.service';
 import { SeoService } from '../../../services/seo.service';
 import { BlogHeaderComponent } from '../../../components/blog/blog-header/blog-header.component';
 import { BlogPostCardComponent } from '../../../components/blog/blog-post-card/blog-post-card.component';
-import { BlogNewsletterComponent } from '../../../components/blog/blog-newsletter/blog-newsletter.component';
 import { BlogFooterComponent } from '../../../components/blog/blog-footer/blog-footer.component';
 import { IconComponent } from '../../../components/ui/icon/icon.component';
 
@@ -19,7 +18,6 @@ import { IconComponent } from '../../../components/ui/icon/icon.component';
     RouterLink,
     BlogHeaderComponent,
     BlogPostCardComponent,
-    BlogNewsletterComponent,
     BlogFooterComponent,
     IconComponent
   ],
@@ -112,7 +110,7 @@ import { IconComponent } from '../../../components/ui/icon/icon.component';
               loading="eager"
             />
             <figcaption class="cover-caption">
-              <span>Créditos: {{ article.coverImageCredit }}</span>
+              <span>Foto: {{ article.coverImageCredit }}</span>
               <span class="caption-separator">•</span>
               <span>Licença: {{ article.coverImageLicense }}</span>
             </figcaption>
@@ -278,7 +276,7 @@ import { IconComponent } from '../../../components/ui/icon/icon.component';
                       <app-icon name="external-link" [size]="12" color="#A855F7"></app-icon>
                     </a>
                     <span *ngIf="!src.url" class="source-text">{{ src.title }}</span>
-                    <span *ngIf="src.publication" class="source-pub">({{ src.publication }}, {{ src.date }})</span>
+                    <span *ngIf="src.publication" class="source-pub">({{ src.publication }}<ng-container *ngIf="src.date">, {{ src.date }}</ng-container>)</span>
                   </li>
                 </ul>
               </div>
@@ -304,11 +302,6 @@ import { IconComponent } from '../../../components/ui/icon/icon.component';
                 [post]="related"
               ></app-blog-post-card>
             </div>
-          </section>
-
-          <!-- Newsletter Section -->
-          <section class="newsletter-wrap">
-            <app-blog-newsletter></app-blog-newsletter>
           </section>
         </div>
       </main>

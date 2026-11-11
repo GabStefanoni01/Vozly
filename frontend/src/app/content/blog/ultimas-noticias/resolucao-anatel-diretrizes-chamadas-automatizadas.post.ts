@@ -9,16 +9,16 @@ export const postResolucaoAnatel: BlogPost = {
     'A Agência Nacional de Telecomunicações intensificou medidas contra o disparo indiscriminado de robocalls no Brasil. Analisamos o impacto regulatório para empresas e por que o foco em inteligência receptiva (inbound) é o caminho seguro e sustentável.',
   categorySlug: 'ultimas-noticias',
   categoryName: 'Últimas Notícias',
-  coverImage: '/blog/covers/cover-anatel-telecom-regulation.svg',
-  coverImageAlt: 'Símbolo da justiça e telecomunicações com escudo regulatório violeta e mapa do Brasil digital',
-  coverImageCredit: 'Vozly Regulatory Compliance & Legal Tech Analysis',
-  coverImageLicense: 'Vozly Proprietary CC-BY 4.0 Creative Commons',
+  coverImage: '/blog/covers/anatel-regulation.jpg',
+  coverImageAlt: 'Cerimônia do Prêmio Anatel de Acessibilidade em Telecomunicações 2019',
+  coverImageCredit: 'Ministério da Ciência, Tecnologia e Inovações / Wikimedia Commons',
+  coverImageLicense: 'CC BY 2.0',
   author: {
-    id: 'editorial-vozly',
-    name: 'Redação Vozly Insights',
-    role: 'Jornalismo Regulatório & Telecom',
-    avatarUrl: '/brand/vozly-app-icon.png',
-    bio: 'Jornalistas e consultores jurídicos especializados em regulação de telecomunicações, direito digital e conformidade com a Anatel.'
+    id: 'equipe-vozly',
+    name: 'Equipe Vozly',
+    role: 'Vozly Insights',
+    avatarUrl: '/brand/vozly-app-icon-trim.png',
+    bio: 'Textos escritos pela equipe da Vozly sobre agentes de voz, inteligência artificial e telecomunicações.'
   },
   publishedAt: '2026-11-01T14:00:00Z',
   publishedAtFormatted: '01 de Novembro de 2026',
@@ -102,9 +102,9 @@ export const postResolucaoAnatel: BlogPost = {
       date: '2024'
     },
     {
-      title: 'Portal Qualidade e Consumidor Telecom',
-      publication: 'Anatel',
-      date: '2026'
+      title: 'Portal da Anatel',
+      url: 'https://www.gov.br/anatel/pt-br',
+      publication: 'Anatel'
     }
   ]
 };

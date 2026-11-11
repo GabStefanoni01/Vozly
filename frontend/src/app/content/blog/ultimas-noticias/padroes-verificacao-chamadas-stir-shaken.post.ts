@@ -2,23 +2,23 @@ import { BlogPost } from '../../../models/blog.models';
 
 export const postStirShakenPadroes: BlogPost = {
   slug: 'padroes-verificacao-chamadas-stir-shaken',
-  title: 'Consórcio de Telecomunicações Adota Novos Padrões de Verificação STIR/SHAKEN',
+  title: 'STIR/SHAKEN e Origem Verificada: como funciona a autenticação de chamadas',
   subtitle:
     'Como a assinatura criptográfica de Caller ID protege empresas contra spoofing e eleva as taxas de atendimento legítimo.',
   excerpt:
     'O avanço da falsificação de identificador de chamadas (Caller ID Spoofing) fez os usuários deixarem de atender números desconhecidos. A expansão do protocolo STIR/SHAKEN e da iniciativa "Origem Verificada" restabelece a confiança na telefonia corporativa.',
   categorySlug: 'ultimas-noticias',
   categoryName: 'Últimas Notícias',
-  coverImage: '/blog/covers/cover-stir-shaken-verified.svg',
-  coverImageAlt: 'Tela de smartphone exibindo chamada verificada com selo de autenticidade verde e certificado digital STIR/SHAKEN',
-  coverImageCredit: 'Vozly Telecom Security Research Initiative',
-  coverImageLicense: 'Vozly Proprietary CC-BY 4.0 Creative Commons',
+  coverImage: '/blog/covers/stir-shaken-telephone.jpg',
+  coverImageAlt: 'Aparelho telefônico de mesa usado em central de atendimento',
+  coverImageCredit: 'Petiatil / Wikimedia Commons',
+  coverImageLicense: 'CC BY-SA 3.0',
   author: {
-    id: 'editorial-vozly',
-    name: 'Redação Vozly Insights',
-    role: 'Jornalismo Regulatório & Telecom',
-    avatarUrl: '/brand/vozly-app-icon.png',
-    bio: 'Jornalistas e analistas dedicados ao acompanhamento contínuo dos protocolos globais de segurança e verificação em redes de telecomunicações.'
+    id: 'equipe-vozly',
+    name: 'Equipe Vozly',
+    role: 'Vozly Insights',
+    avatarUrl: '/brand/vozly-app-icon-trim.png',
+    bio: 'Textos escritos pela equipe da Vozly sobre agentes de voz, inteligência artificial e telecomunicações.'
   },
   publishedAt: '2026-10-18T10:15:00Z',
   publishedAtFormatted: '18 de Outubro de 2026',
@@ -102,9 +102,9 @@ export const postStirShakenPadroes: BlogPost = {
       date: '2021'
     },
     {
-      title: 'Iniciativa Origem Verificada: Guia de Implementação para Empresas',
-      publication: 'Consórcio Brasileiro de Telecomunicações',
-      date: '2025'
+      title: 'Origem Verificada — ABR Telecom',
+      url: 'https://www.abrtelecom.com.br/',
+      publication: 'ABR Telecom'
     }
   ]
 };

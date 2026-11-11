@@ -8,8 +8,8 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
     description: 'Transformação digital, infraestrutura de voz em nuvem e evolução dos sistemas corporativos.',
     longDescription:
       'Artigos e ensaios aprofundados sobre a modernização da infraestrutura de telecomunicações, computação em nuvem, segurança corporativa e o impacto de novas tecnologias nas operações empresariais.',
-    coverImage: '/blog/covers/cover-tech-innovation.svg',
-    coverImageAlt: 'Infraestrutura tecnológica em nuvem com circuitos violeta luminosos',
+    coverImage: '/blog/covers/category-tech-network.jpg',
+    coverImageAlt: 'Cabos de rede conectados a um switch',
     icon: 'cpu',
     metaTitle: 'Tecnologia & Inovação — Vozly Insights',
     metaDescription:
@@ -22,8 +22,8 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
     description: 'Arquiteturas de voz neural, modelos de linguagem em tempo real e orquestração de agentes autônomos.',
     longDescription:
       'Explorações técnicas e de engenharia detalhando o pipeline de baixa latência (STT, LLM, TTS), algoritmos de detecção de interrupção (barge-in), function calling determinístico e governança de IA generativa.',
-    coverImage: '/blog/covers/cover-ai-engineering.svg',
-    coverImageAlt: 'Rede neural artificial com nós luminosos e ondas de áudio convergentes',
+    coverImage: '/blog/covers/category-ai-rack.jpg',
+    coverImageAlt: 'Servidores em rack no data center do NERSC',
     icon: 'sparkles',
     metaTitle: 'Engenharia & Inteligência Artificial — Vozly Insights',
     metaDescription:
@@ -36,8 +36,8 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
     description: 'Acontecimentos regulatórios, padrões globais de telefonia e atualizações da indústria de IA.',
     longDescription:
       'Cobertura jornalística contextualizada dos marcos regulatórios da Anatel, adoção de protocolos de autenticação STIR/SHAKEN, lançamentos de novos modelos fundacionais e movimentações da indústria.',
-    coverImage: '/blog/covers/cover-news.svg',
-    coverImageAlt: 'Rede global de telecomunicações com satélites e transmissão de dados segura',
+    coverImage: '/blog/covers/category-news-switchboard.jpg',
+    coverImageAlt: 'Mesa telefônica histórica no Elisa Telephone Museum',
     icon: 'activity',
     metaTitle: 'Últimas Notícias — Vozly Insights',
     metaDescription:
