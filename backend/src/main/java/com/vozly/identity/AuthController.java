@@ -128,6 +128,9 @@ public class AuthController {
                                   @NotBlank @Size(max = 160) String workspaceName) {}
     public record LoginRequest(@NotBlank @Email @Size(max = 320) String email,
                                @NotBlank @Size(max = 128) String password) {}
+    public record ForgotPasswordRequest(@NotBlank @Email @Size(max = 320) String email) {}
+    public record ResetPasswordRequest(@NotBlank @Size(max = 256) String token,
+                                       @NotBlank @Size(min = 12, max = 128) String newPassword) {}
     public record TokenResponse(String accessToken, String tokenType, long expiresIn,
                                 java.util.UUID userId, java.util.UUID tenantId, String role) {}
 }
