@@ -22,13 +22,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
     private static final String REFRESH_COOKIE = "vozly_refresh";
-    private final AuthService authService;\n    private final PasswordResetService passwordResetService;
+    private final AuthService authService;
+    private final PasswordResetService passwordResetService;
     private final JdbcTemplate jdbc;
     private final boolean secureCookie;
 
-    public AuthController(AuthService authService, JdbcTemplate jdbc,
+    public AuthController(AuthService authService, PasswordResetService passwordResetService, JdbcTemplate jdbc,
                           @Value("${vozly.security.cookies.secure:true}") boolean secureCookie) {
         this.authService = authService;
+        this.passwordResetService = passwordResetService;
         this.jdbc = jdbc;
         this.secureCookie = secureCookie;
     }
@@ -65,7 +67,21 @@ public class AuthController {
         return authenticatedResponse(result);
     }
 
-    @PostMapping("/password/forgot")\n    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {\n        passwordResetService.requestReset(request.email());\n        return ResponseEntity.accepted()\n                .header(HttpHeaders.CACHE_CONTROL, "no-store")\n                .body(Map.of("message", "Se o e-mail estiver cadastrado, você receberá um link para redefinir sua senha."));\n    }\n\n    @PostMapping("/password/reset")\n    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {\n        passwordResetService.resetPassword(request.token(), request.newPassword());\n        return ResponseEntity.noContent().header(HttpHeaders.CACHE_CONTROL, "no-store").build();\n    }\n\n    @PostMapping("/logout")
+    @PostMapping("/password/forgot")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestReset(request.email());
+        return ResponseEntity.accepted()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .body(Map.of("message", "Se o e-mail estiver cadastrado, você receberá um link para redefinir sua senha."));
+    }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.token(), request.newPassword());
+        return ResponseEntity.noContent().header(HttpHeaders.CACHE_CONTROL, "no-store").build();
+    }
+
+    @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CookieValue(name = REFRESH_COOKIE, required = false) String token) {
         authService.logout(token);
         return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
