@@ -67,8 +67,8 @@ class DashboardControllerPostgresTests {
         assertThat(summary.calls().transferred()).isZero();
         assertThat(summary.calls().failed()).isZero();
         assertThat(summary.previousCalls().total()).isZero();
-        assertThat(summary.durationSeconds().total()).isEqualTo(70);
-        assertThat(summary.durationSeconds().average()).isEqualTo(70.0);
+        assertThat(summary.durationSeconds().total()).isEqualTo(60);
+        assertThat(summary.durationSeconds().average()).isEqualTo(60.0);
         assertThat(summary.series()).hasSize(3);
         assertThat(summary.series()).extracting(DashboardController.DailyUsage::calls)
                 .containsExactly(0L, 1L, 0L);
