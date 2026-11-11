@@ -1,0 +1,49 @@
+services:
+  # The backend is private: browser traffic reaches it only through the frontend Nginx proxy.
+  - type: pserv
+    name: vozly-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    autoDeployTrigger: off
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: VOZLY_JWT_SECRET
+        generateValue: true
+      - key: VOZLY_JWT_ISSUER
+        sync: false
+      - key: VOZLY_JWT_AUDIENCE
+        value: vozly-api
+      - key: FRONTEND_URL
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: MICROSOFT_TENANT_ID
+        sync: false
+      - key: MICROSOFT_CLIENT_ID
+        sync: false
+      - key: MICROSOFT_CLIENT_SECRET
+        sync: false
+
+  - type: web
+    name: vozly-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeployTrigger: off
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: API_UPSTREAM
+        fromService:
+          name: vozly-backend
+          type: pserv
+          property: hostport
