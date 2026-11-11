@@ -36,6 +36,7 @@ spring:
             user-name-attribute: sub
 
 server:
+  forward-headers-strategy: framework
   servlet:
     session:
       cookie:
