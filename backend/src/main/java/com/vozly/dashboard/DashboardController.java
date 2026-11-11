@@ -182,14 +182,14 @@ public class DashboardController {
                 FROM vozly.calls
                 WHERE tenant_id = ? AND started_at >= ? AND started_at < ? AND answered_at IS NOT NULL
                 """, (rs, n) -> new DurationSummary(rs.getLong("total"), rs.getDouble("average")),
-                tenantId, java.sql.Timestamp.from(start), java.sql.Timestamp.from(end));
+                tenantId, OffsetDateTime.ofInstant(start, ZoneOffset.UTC), OffsetDateTime.ofInstant(end, ZoneOffset.UTC));
         List<EndReasonCount> reasons = jdbc.query("""
                 SELECT end_reason, COUNT(*) AS total
                 FROM vozly.calls
                 WHERE tenant_id = ? AND started_at >= ? AND started_at < ? AND end_reason IS NOT NULL
                 GROUP BY end_reason ORDER BY end_reason
                 """, (rs, n) -> new EndReasonCount(rs.getString("end_reason"), rs.getLong("total")),
-                tenantId, java.sql.Timestamp.from(start), java.sql.Timestamp.from(end));
+                tenantId, OffsetDateTime.ofInstant(start, ZoneOffset.UTC), OffsetDateTime.ofInstant(end, ZoneOffset.UTC));
         List<DailyUsage> series = jdbc.query("""
                 WITH days AS (
                     SELECT generate_series(
@@ -211,8 +211,8 @@ public class DashboardController {
                 FROM days LEFT JOIN daily USING (day)
                 ORDER BY days.day
                 """, (rs, n) -> new DailyUsage(rs.getString("date"), rs.getLong("calls"),
-                    rs.getDouble("minutes")), java.sql.Timestamp.from(start), java.sql.Timestamp.from(end), tenantId,
-                java.sql.Timestamp.from(start), java.sql.Timestamp.from(end));
+                    rs.getDouble("minutes")), OffsetDateTime.ofInstant(start, ZoneOffset.UTC), OffsetDateTime.ofInstant(end, ZoneOffset.UTC), tenantId,
+                OffsetDateTime.ofInstant(start, ZoneOffset.UTC), OffsetDateTime.ofInstant(end, ZoneOffset.UTC));
 
         return new UsageSummaryResponse(
                 new Period(from.withOffsetSameInstant(ZoneOffset.UTC), to.withOffsetSameInstant(ZoneOffset.UTC)),
@@ -228,7 +228,7 @@ public class DashboardController {
                 FROM vozly.calls
                 WHERE tenant_id = ? AND started_at >= ? AND started_at < ?
                 """, (rs, n) -> new CallCounters(rs.getLong("total"), rs.getLong("completed"),
-                    rs.getLong("transferred"), rs.getLong("failed")), tenantId, java.sql.Timestamp.from(from), java.sql.Timestamp.from(to));
+                    rs.getLong("transferred"), rs.getLong("failed")), tenantId, OffsetDateTime.ofInstant(from, ZoneOffset.UTC), OffsetDateTime.ofInstant(to, ZoneOffset.UTC));
     }
 
     private boolean exists(String sql, UUID tenantId) {
