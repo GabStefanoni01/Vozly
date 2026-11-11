@@ -14,9 +14,9 @@ export class SessionStore {
 
   /** ✅ disponível hoje no backend. */
   readonly health = remoteResource(() => this.api.getHealth());
-  /** ✅ GET /api/v1/auth/me — hoje devolve { userId, tenantId, role }. */
+  /** GET /api/v1/auth/me — identidade e perfil básico do usuário autenticado. */
   readonly me = remoteResource(() => this.api.getMe());
-  /** ⏳ depende de GET /api/v1/tenants/current (módulo tenants). */
+  /** Workspace ativo, consultado no backend com tenant do JWT. */
   readonly tenant = remoteResource(() => this.api.getCurrentTenant());
 
   readonly apiOnline = computed(() => this.health.status() === 'ready' && this.health.data()?.status === 'UP');

@@ -57,7 +57,7 @@ export class DashboardApiService {
 
   /**
    * Workspace ativo — `GET /api/v1/tenants/current`.
-   * ⏳ PENDENTE (módulo tenants): migration tenants + TenantController.current().
+   * ✅ IMPLEMENTADO em DashboardController.currentTenant().
    */
   getCurrentTenant(): Observable<TenantResponse> {
     return this.http.get<TenantResponse>(`${this.config.baseUrl}/tenants/current`);
@@ -65,7 +65,7 @@ export class DashboardApiService {
 
   /**
    * Progresso do onboarding — `GET /api/v1/onboarding`.
-   * ⏳ PENDENTE (módulo tenants): migration onboarding_progress e cálculo das etapas
+   * ✅ IMPLEMENTADO em DashboardController.onboarding(); etapas sem fonte persistida permanecem pendentes.
    * a partir de pré-requisitos reais. Ver BACKEND_CONTRACTS.onboarding.
    */
   getOnboarding(): Observable<OnboardingResponse> {
@@ -75,7 +75,7 @@ export class DashboardApiService {
   /**
    * Indicadores, série diária e motivos de encerramento —
    * `GET /api/v1/usage/summary?from&to&granularity=DAY`.
-   * ⏳ PENDENTE (módulos usage + conversations): migrations calls/usage_records e
+   * ✅ IMPLEMENTADO em DashboardController.usageSummary(); agregações leem chamadas persistidas.
    * agregações descritas em BACKEND_CONTRACTS.usageSummary.
    */
   getUsageSummary(range: DashboardRange): Observable<UsageSummaryResponse> {
@@ -89,7 +89,7 @@ export class DashboardApiService {
 
   /**
    * Últimas chamadas — `GET /api/v1/calls?page=0&size=N&sort=startedAt,desc`.
-   * ⏳ PENDENTE (módulo conversations): CallController.list paginado com número
+   * ✅ IMPLEMENTADO em DashboardController.calls(); lista paginada com número
    * de origem mascarado no servidor. Ver BACKEND_CONTRACTS.recentCalls.
    */
   listRecentCalls(size = 6): Observable<PageResponse<CallListItem>> {
@@ -99,7 +99,7 @@ export class DashboardApiService {
 
   /**
    * Agentes do workspace — `GET /api/v1/agents?size=20&sort=updatedAt,desc`.
-   * ⏳ PENDENTE (módulo agents): migrations agents/agent_versions e AgentController.list.
+   * ✅ IMPLEMENTADO em DashboardController.agents() e migration V5.
    */
   listAgents(): Observable<PageResponse<AgentListItem>> {
     const params = new HttpParams().set('page', 0).set('size', 20).set('sort', 'updatedAt,desc');
@@ -108,7 +108,7 @@ export class DashboardApiService {
 
   /**
    * Números telefônicos — `GET /api/v1/phone-numbers`.
-   * ⏳ PENDENTE (módulo telephony): depende da escolha do provedor (docs/10 §12).
+   * ✅ Listagem implementada em DashboardController.phoneNumbers(); provisionamento depende da seleção futura do provedor.
    */
   listPhoneNumbers(): Observable<PageResponse<PhoneNumberListItem>> {
     return this.http.get<PageResponse<PhoneNumberListItem>>(`${this.config.baseUrl}/phone-numbers`);
