@@ -595,9 +595,14 @@ export class LoginComponent {
     try {
       await this.auth.login(this.email.trim(), this.senha);
       await this.router.navigateByUrl(this.returnUrl);
-    } catch {
+    } catch (error: unknown) {
       this.tipoMensagem = 'erro';
-      this.mensagem = 'Não foi possível entrar. Confira seu e-mail e senha e tente novamente.';
+      const code = error instanceof HttpErrorResponse ? error.error?.code : null;
+      this.mensagem = code === 'INVALID_CREDENTIALS' || (error instanceof HttpErrorResponse && error.status === 401)
+        ? 'E-mail ou senha incorretos. Confira seus dados e tente novamente.'
+        : error instanceof HttpErrorResponse && error.status === 0
+          ? 'Não foi possível conectar ao serviço. Verifique sua conexão e tente novamente.'
+          : 'Não foi possível entrar agora. Tente novamente em instantes.';
     } finally {
       this.carregando = false;
     }
