@@ -79,7 +79,7 @@ O Blueprint gera `VOZLY_JWT_SECRET` automaticamente. Não substitua por um valor
    O callback passa pelo Nginx e é encaminhado ao backend privado. O backend usa os cabeçalhos encaminhados pelo proxy para construir a URL externa HTTPS.
 7. Faça o deploy dos serviços e confira o health check do frontend e os logs do backend. O Flyway executa as migrations na inicialização, conforme a configuração atual.
 
-O arquivo Blueprint usa `autoDeploy: false`: novos commits não devem disparar deploy automaticamente. A criação inicial dos recursos pelo Blueprint ainda exige confirmação no painel Render.
+O arquivo Blueprint usa `autoDeployTrigger: off`: novos commits não devem disparar deploy automaticamente. A criação inicial dos recursos pelo Blueprint ainda exige confirmação no painel Render.
 
 ## Decisões e limites atuais
 
