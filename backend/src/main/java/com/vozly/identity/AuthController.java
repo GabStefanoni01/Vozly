@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,11 +23,13 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private static final String REFRESH_COOKIE = "vozly_refresh";
     private final AuthService authService;
+    private final JdbcTemplate jdbc;
     private final boolean secureCookie;
 
-    public AuthController(AuthService authService,
+    public AuthController(AuthService authService, JdbcTemplate jdbc,
                           @Value("${vozly.security.cookies.secure:true}") boolean secureCookie) {
         this.authService = authService;
+        this.jdbc = jdbc;
         this.secureCookie = secureCookie;
     }
 
@@ -71,8 +74,19 @@ public class AuthController {
 
     @GetMapping("/me")
     public Map<String, Object> me(@AuthenticationPrincipal Jwt jwt) {
-        return Map.of("userId", jwt.getSubject(), "tenantId", jwt.getClaimAsString("tenant_id"),
-                "role", jwt.getClaimAsString("role"));
+        return jdbc.query("""
+                SELECT name, email_normalized
+                FROM vozly.users
+                WHERE id = ? AND status = 'ACTIVE'
+                """, rs -> {
+            if (!rs.next()) throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED);
+            return Map.of("userId", jwt.getSubject(),
+                    "tenantId", jwt.getClaimAsString("tenant_id"),
+                    "role", jwt.getClaimAsString("role"),
+                    "name", rs.getString("name"),
+                    "email", rs.getString("email_normalized"));
+        }, java.util.UUID.fromString(jwt.getSubject()));
     }
 
     private ResponseEntity<?> authenticatedResponse(AuthService.AuthResult result) {
