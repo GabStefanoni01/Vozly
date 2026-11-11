@@ -63,8 +63,17 @@ export class RegisterComponent {
         workspaceName: this.workspaceName.trim()
       });
       await this.router.navigateByUrl('/dashboard');
-    } catch {
-      this.error = 'Não foi possível criar sua conta. Confira os dados e tente novamente.';
+    } catch (error: unknown) {
+      const code = error instanceof HttpErrorResponse ? error.error?.code : null;
+      if (code === 'EMAIL_ALREADY_REGISTERED') {
+        this.error = 'Este e-mail já está cadastrado. Entre na sua conta ou utilize outro e-mail.';
+      } else if (code === 'VALIDATION_ERROR' || (error instanceof HttpErrorResponse && error.status === 400)) {
+        this.error = 'Confira os campos: informe um e-mail válido e uma senha entre 12 e 128 caracteres.';
+      } else if (error instanceof HttpErrorResponse && error.status === 0) {
+        this.error = 'Não foi possível conectar ao serviço. Verifique sua conexão e tente novamente.';
+      } else {
+        this.error = 'Não foi possível criar sua conta agora. Tente novamente em instantes.';
+      }
     } finally {
       this.loading = false;
     }
