@@ -74,6 +74,8 @@ Endpoints implementados:
 - `POST /api/v1/auth/login`: autentica e inicia sessão.
 - `POST /api/v1/auth/refresh`: rotaciona refresh token e emite novo access token.
 - `POST /api/v1/auth/logout`: revoga o refresh token e limpa o cookie.
+- `POST /api/v1/auth/password/forgot`: solicita recuperação; sempre responde `202` com mensagem genérica para não revelar se o e-mail existe.
+- `POST /api/v1/auth/password/reset`: recebe `token` e `newPassword`; consome o token de uso único e atualiza a senha.
 - `GET /api/v1/auth/me`: retorna `userId`, `tenantId`, `role`, `name` e `email` para a identidade autenticada.
 - `GET /api/v1/tenants/current`: retorna o workspace associado ao tenant do JWT.
 
@@ -83,7 +85,8 @@ Regras do produto:
 - O cadastro local exige senha entre 12 e 128 caracteres e normaliza o e-mail.
 - O refresh token é armazenado no banco somente como hash; o cookie é HttpOnly, SameSite Strict e Secure conforme configuração. Access token tem validade de 10 minutos e não é persistido no localStorage.
 - Nunca aceitar papel, user_id ou tenant_id do cliente como prova de autorização.
-- Recuperação de senha ainda não está implementada.
+- Recuperação: token aleatório de 256 bits, persistido somente como SHA-256, válido por 30 minutos e de uso único. Ao concluir, todos os refresh tokens do usuário são revogados. O access JWT já emitido pode permanecer válido até seu vencimento (10 minutos).
+- Recuperação de senha implementada com e-mail SMTP; configurar `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS`, `PASSWORD_RESET_FROM` e `FRONTEND_URL` no ambiente.
 
 ### Matriz inicial de permissões
 
@@ -108,7 +111,7 @@ A matriz é uma política inicial para revisão. Permissões finas podem ser int
 
 | Recurso | Operações principais | Observações |
 |---|---|---|
-| Sessão/identidade | `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me` | Implementado; sem expor credenciais. Recuperação de senha pendente. |
+| Sessão/identidade | `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me` | Implementado; inclui recuperação por e-mail, token temporário de uso único e revogação dos refresh tokens. |
 | Tenants | `GET /api/v1/tenants/current` | Leitura do workspace atual implementada. Cadastro cria um workspace por usuário; gestão/edição do workspace permanece pendente. |
 | Membros | `GET/POST /tenants/current/members`, `PATCH/DELETE /members/{id}` | Convites e alteração de papéis somente admin. |
 | Onboarding | `GET /onboarding`, `PATCH /onboarding` | Progresso informativo; backend valida pré-requisitos reais. |
