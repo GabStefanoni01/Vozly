@@ -7,7 +7,6 @@ on:
       - "backend/**"
       - ".github/workflows/flyway-auth-validation.yml"
   push:
-    branches: [develop]
     paths:
       - "backend/**"
       - ".github/workflows/flyway-auth-validation.yml"
