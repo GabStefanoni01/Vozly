@@ -246,7 +246,7 @@ public class DashboardController {
     }
 
     private static PageRequest pageRequest(int page, int size, String sort, Map<String, String> allowed) {
-        if (page < 0 || page > Integer.MAX_VALUE / size || size < 1 || size > MAX_PAGE_SIZE)
+        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE || page > Integer.MAX_VALUE / size)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Parâmetros de paginação inválidos.");
         String[] parts = sort.split(",", -1);
         if (parts.length != 2 || !allowed.containsKey(parts[0])
