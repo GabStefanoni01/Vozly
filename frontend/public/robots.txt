@@ -1,0 +1,13 @@
+# Robots.txt for Vozly — Plataforma de Inteligência Artificial Telefônica
+User-agent: *
+Allow: /
+Allow: /blog/
+Allow: /brand/
+
+# Proteger áreas administrativas e endpoints de API internos da indexação pública
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /auth/sso/callback
+
+# Sitemap oficial
+Sitemap: https://vozly.ai/sitemap.xml

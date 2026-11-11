@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Página Institucional Principal -->
+  <url>
+    <loc>https://vozly.ai/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Hub Editorial: Vozly Insights -->
+  <url>
+    <loc>https://vozly.ai/blog</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Categorias Editoriais -->
+  <url>
+    <loc>https://vozly.ai/blog/tecnologia-inovacao</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vozly.ai/blog/engenharia-inteligencia-artificial</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vozly.ai/blog/ultimas-noticias</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Artigos: Tecnologia & Inovação -->
+  <url>
+    <loc>https://vozly.ai/blog/tecnologia-inovacao/futuro-conectividade-nuvem-redes-voz</loc>
+    <lastmod>2026-11-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vozly.ai/blog/tecnologia-inovacao/seguranca-informacao-criptografia-ambientes-corporativos</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vozly.ai/blog/tecnologia-inovacao/transformacao-digital-telecomunicacoes-b2b</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Artigos: Engenharia & Inteligência Artificial -->
+  <url>
+    <loc>https://vozly.ai/blog/engenharia-inteligencia-artificial/arquitetura-agentes-voz-baixa-latencia</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vozly.ai/blog/engenharia-inteligencia-artificial/barge-in-interrupcao-natural-modelos-neurais</loc>
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vozly.ai/blog/engenharia-inteligencia-artificial/orquestracao-ferramentas-function-calling-sistemas-voz</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Artigos: Últimas Notícias -->
+  <url>
+    <loc>https://vozly.ai/blog/ultimas-noticias/avancos-modelos-multimodais-atendimento-telefonico</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vozly.ai/blog/ultimas-noticias/resolucao-anatel-diretrizes-chamadas-automatizadas</loc>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vozly.ai/blog/ultimas-noticias/padroes-verificacao-chamadas-stir-shaken</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>
