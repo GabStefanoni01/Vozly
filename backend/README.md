@@ -97,7 +97,9 @@ A solicitação é armazenada em `vozly.interest_submissions`. O endpoint é pú
 
 ## Persistência
 
-Flyway cria o schema `vozly` e aplica migrations versionadas. A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse. A migration V4 cria buckets de rate limiting no PostgreSQL, compartilhados entre instâncias, com limpeza oportunista de janelas antigas.
+Flyway cria o schema `vozly` e aplica migrations versionadas em `classpath:db/migration`. A inicialização valida checksums e nomes, não permite execução fora de ordem, não faz baseline automático de schemas preexistentes e mantém `clean` desabilitado. A role PostgreSQL configurada em `DB_USERNAME` precisa ter permissão para criar o schema e suas tabelas/índices. Não habilite `baseline-on-migrate` nem execute `clean` como solução para erro de produção: primeiro identifique o estado de `vozly.flyway_schema_history` e o SQLSTATE no log.
+
+A migration V2 cria usuários, tenants, memberships, identidades externas e sessões de refresh token. Cadastro de conta cria usuário, tenant e membership OWNER na mesma transação. A migration V3 cria a tabela de solicitações de interesse. A migration V4 cria buckets de rate limiting no PostgreSQL, compartilhados entre instâncias, com limpeza oportunista de janelas antigas. Migrations já aplicadas são imutáveis; correções de schema devem entrar em uma nova migration versionada.
 
 ## Executar e testar
 
@@ -109,7 +111,13 @@ mvn test
 mvn spring-boot:run
 ```
 
-O profile de teste usa H2 em memória. Para executar localmente contra Neon, configure as variáveis `DB_*` com os dados fornecidos pelo painel Neon e mantenha SSL habilitado na JDBC URL.
+O profile de teste de serviços usa H2 em memória e desabilita Flyway; ele não valida os SQLs PostgreSQL de produção. A classe `FlywayPostgresMigrationTests` usa Testcontainers com PostgreSQL 16 para executar V1–V4 em uma base vazia, validar o histórico e confirmar que uma segunda execução não reaplica migrations. Execute esse teste com Docker disponível:
+
+```bash
+mvn -Dtest=FlywayPostgresMigrationTests test
+```
+
+O teste é ignorado automaticamente quando Docker não está disponível. Para executar localmente contra Neon, configure as variáveis `DB_*` com os dados fornecidos pelo painel Neon e mantenha SSL habilitado na JDBC URL.
 
 ## Health check
 
