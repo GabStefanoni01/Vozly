@@ -189,7 +189,7 @@ public class DashboardController {
                 WHERE tenant_id = ? AND started_at >= ? AND started_at < ? AND end_reason IS NOT NULL
                 GROUP BY end_reason ORDER BY end_reason
                 """, (rs, n) -> new EndReasonCount(rs.getString("end_reason"), rs.getLong("total")),
-                tenantId, start, end);
+                tenantId, java.sql.Timestamp.from(start), java.sql.Timestamp.from(end));
         List<DailyUsage> series = jdbc.query("""
                 WITH days AS (
                     SELECT generate_series(
