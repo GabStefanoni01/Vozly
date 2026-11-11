@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { LandingPageComponent } from './pages/landing-page/landing-page.component';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
+import { ForgotPasswordComponent } from './pages/auth/forgot-password.component';
+import { ResetPasswordComponent } from './pages/auth/reset-password.component';
 import { SsoCallbackComponent } from './pages/auth/sso-callback.component';
 import { authGuard } from './core/auth/auth.guard';
 
@@ -9,6 +11,8 @@ export const routes: Routes = [
   { path: '', component: LandingPageComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'auth/sso/callback', component: SsoCallbackComponent },
 
   // Painel autenticado — exige sessão válida (authGuard); páginas carregadas sob demanda.
