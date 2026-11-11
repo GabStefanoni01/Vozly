@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiAuthService } from '../../services/api-auth.service';
+import { HttpErrorResponse } from '@angular/common/http';
 import { safeReturnUrl } from '../../core/auth/auth.guard';
 
 @Component({
