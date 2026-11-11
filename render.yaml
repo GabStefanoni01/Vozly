@@ -1,49 +1,49 @@
+# Render Blueprint — ambiente de DESENVOLVIMENTO do frontend Vozly.
+# URL pública: https://devvozly.onrender.com (o prefixo "dev" identifica o ambiente).
+# Branch publicada: deploy/dev-dashboard (auto-deploy a cada push).
+#
+# Backend: https://vozly.onrender.com (FRONTEND_URL = URL deste site).
+# Os rewrites abaixo fazem o papel do Nginx (frontend/nginx/default.conf.template):
+# o navegador fala só com este domínio, então a API e os cookies de autenticação
+# ficam same-origin. Ver docs/12-docker-e-deploy-render.md — "Ambiente de
+# desenvolvimento publicado". NÃO integrar este arquivo na develop.
 services:
-  # The backend is private: browser traffic reaches it only through the frontend Nginx proxy.
-  - type: pserv
-    name: vozly-backend
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: .
-    autoDeployTrigger: off
-    envVars:
-      - key: PORT
-        value: "8080"
-      - key: DB_URL
-        sync: false
-      - key: DB_USERNAME
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: VOZLY_JWT_SECRET
-        generateValue: true
-      - key: VOZLY_JWT_ISSUER
-        sync: false
-      - key: VOZLY_JWT_AUDIENCE
-        value: vozly-api
-      - key: FRONTEND_URL
-        sync: false
-      - key: COOKIE_SECURE
-        value: "true"
-      - key: MICROSOFT_TENANT_ID
-        sync: false
-      - key: MICROSOFT_CLIENT_ID
-        sync: false
-      - key: MICROSOFT_CLIENT_SECRET
-        sync: false
-
   - type: web
-    name: vozly-frontend
-    runtime: docker
-    dockerfilePath: ./frontend/Dockerfile
-    dockerContext: .
-    healthCheckPath: /healthz
-    autoDeployTrigger: off
+    runtime: static
+    name: devvozly
+    branch: deploy/dev-dashboard
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist/frontend/browser
+    pullRequestPreviewsEnabled: false
     envVars:
-      - key: PORT
-        value: "10000"
-      - key: API_UPSTREAM
-        fromService:
-          name: vozly-backend
-          type: pserv
-          property: hostport
+      - key: NODE_VERSION
+        value: 22.13.1
+    headers:
+      - path: /*
+        name: X-Robots-Tag
+        value: noindex, nofollow
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    routes:
+      # Proxy para o backend (ordem importa: antes do fallback do Angular).
+      - type: rewrite
+        source: /api/*
+        destination: https://vozly.onrender.com/api/*
+      - type: rewrite
+        source: /actuator/*
+        destination: https://vozly.onrender.com/actuator/*
+      - type: rewrite
+        source: /oauth2/*
+        destination: https://vozly.onrender.com/oauth2/*
+      - type: rewrite
+        source: /login/oauth2/*
+        destination: https://vozly.onrender.com/login/oauth2/*
+      # Angular usa rotas no cliente (/dashboard, /login…): sempre servir o index.html.
+      - type: rewrite
+        source: /*
+        destination: /index.html
