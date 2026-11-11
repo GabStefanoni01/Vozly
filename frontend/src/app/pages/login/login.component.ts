@@ -94,7 +94,7 @@ import { safeReturnUrl } from '../../core/auth/auth.guard';
                 </button>
               </div>
 
-              <a class="la-link la-esqueci" href="javascript:void(0)" (click)="esqueciSenha()">
+              <a class="la-link la-esqueci" routerLink="/forgot-password">
                 Esqueci minha senha
               </a>
 
@@ -610,11 +610,6 @@ export class LoginComponent {
 
   entrarComMicrosoft(): void {
     window.location.assign(this.auth.microsoftLoginUrl());
-  }
-
-  esqueciSenha(): void {
-    this.tipoMensagem = 'sucesso';
-    this.mensagem = 'Fluxo de recuperação de senha será ativado na fase de autenticação.';
   }
 
   criarConta(): void {
