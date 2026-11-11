@@ -7,15 +7,13 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 
 class AuthExceptionHandlerTests {
     private final AuthExceptionHandler handler = new AuthExceptionHandler();
 
     @Test
     void invalidCredentialsUseOneGenericUnauthorizedResponse() {
-        ResponseEntity<Map<String, String>> response =
-                handler.badCredentials(new BadCredentialsException("invalid"));
+        ResponseEntity<Map<String, String>> response = handler.badCredentials();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody())
@@ -25,8 +23,7 @@ class AuthExceptionHandlerTests {
 
     @Test
     void duplicateEmailUsesGenericConflictResponse() {
-        ResponseEntity<Map<String, String>> response =
-                handler.duplicateEmail(new AuthService.EmailAlreadyRegisteredException());
+        ResponseEntity<Map<String, String>> response = handler.duplicateEmail();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody())
@@ -36,8 +33,7 @@ class AuthExceptionHandlerTests {
 
     @Test
     void microsoftAccountLinkRequirementUsesConflictResponse() {
-        ResponseEntity<Map<String, String>> response =
-                handler.accountLinkRequired(new AuthService.AccountLinkRequiredException());
+        ResponseEntity<Map<String, String>> response = handler.accountLinkRequired();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).containsEntry("code", "ACCOUNT_LINK_REQUIRED");
