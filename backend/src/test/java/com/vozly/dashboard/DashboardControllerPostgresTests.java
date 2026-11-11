@@ -45,8 +45,9 @@ class DashboardControllerPostgresTests {
     void clearDomainRows() {
         jdbc.update("DELETE FROM vozly.calls");
         jdbc.update("DELETE FROM vozly.phone_numbers");
-        jdbc.update("DELETE FROM vozly.agent_versions");
+        jdbc.update("UPDATE vozly.agents SET current_published_version_id = NULL");
         jdbc.update("DELETE FROM vozly.agents");
+        jdbc.update("DELETE FROM vozly.agent_versions");
         jdbc.update("DELETE FROM vozly.memberships");
         jdbc.update("DELETE FROM vozly.tenants");
     }
