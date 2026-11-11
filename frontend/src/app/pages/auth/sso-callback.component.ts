@@ -19,7 +19,7 @@ export class SsoCallbackComponent implements OnInit {
     try {
       await this.auth.completeMicrosoftLogin();
       await this.auth.me();
-      await this.router.navigateByUrl('/');
+      await this.router.navigateByUrl('/dashboard');
     } catch {
       this.auth.clearLocalSession();
       await this.router.navigate(['/login'], { queryParams: { error: 'microsoft_sso_failed' } });

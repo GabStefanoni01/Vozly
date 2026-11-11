@@ -23,11 +23,39 @@ export interface RegisterPayload {
 export class ApiAuthService {
   private readonly baseUrl = environment.apiUrl.replace(/\/$/, '');
   private accessToken: string | null = null;
+  private pendingRefresh: Promise<boolean> | null = null;
 
   constructor(private readonly http: HttpClient) {}
 
   get authenticated(): boolean {
     return this.accessToken !== null;
+  }
+
+  /** Access token em memória (nunca persistido), usado pelo authInterceptor. */
+  get token(): string | null {
+    return this.accessToken;
+  }
+
+  /**
+   * Garante uma sessão válida: se não há access token (ex.: página recarregada),
+   * renova pelo refresh cookie HttpOnly. Chamadas concorrentes compartilham a
+   * mesma renovação, porque o refresh token é rotacionado a cada uso.
+   * Retorna false quando não há sessão (cookie ausente/expirado).
+   */
+  ensureSession(force = false): Promise<boolean> {
+    if (this.accessToken && !force) return Promise.resolve(true);
+    if (!this.pendingRefresh) {
+      this.pendingRefresh = this.refresh()
+        .then(() => true)
+        .catch(() => {
+          this.accessToken = null;
+          return false;
+        })
+        .finally(() => {
+          this.pendingRefresh = null;
+        });
+    }
+    return this.pendingRefresh;
   }
 
   async login(email: string, password: string): Promise<void> {

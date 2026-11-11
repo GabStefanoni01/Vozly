@@ -61,7 +61,7 @@ export class RegisterComponent {
         password: this.password,
         workspaceName: this.workspaceName.trim()
       });
-      await this.router.navigateByUrl('/');
+      await this.router.navigateByUrl('/dashboard');
     } catch {
       this.error = 'Não foi possível criar sua conta. Confira os dados e tente novamente.';
     } finally {

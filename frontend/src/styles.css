@@ -468,3 +468,301 @@ h1, h2, h3, h4, h5, h6 {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   VOZLY DASHBOARD — SISTEMA DE DESIGN & TOKENS OPERACIONAIS (FASE 02)
+   Estética Glassmorphism Premium, Neon Glow Violeta e Superfícies Acrílicas
+   ========================================================================== */
+
+.dash-glass-card {
+  background: rgba(18, 16, 26, 0.76);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(168, 85, 247, 0.16);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+  transition: all var(--transition-smooth);
+}
+
+.dash-glass-card:hover {
+  border-color: rgba(168, 85, 247, 0.35);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.8), 0 0 24px rgba(109, 0, 255, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+.dash-glass-card-interactive {
+  cursor: pointer;
+}
+
+.dash-glass-card-interactive:hover {
+  transform: translateY(-2px);
+}
+
+/* Pílulas de Status */
+.dash-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.dash-badge-purple {
+  background: rgba(109, 0, 255, 0.16);
+  color: #C084FC;
+  border: 1px solid rgba(168, 85, 247, 0.32);
+}
+
+.dash-badge-green {
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ADE80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.dash-badge-amber {
+  background: rgba(245, 158, 11, 0.14);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.dash-badge-blue {
+  background: rgba(56, 189, 248, 0.14);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.dash-badge-red {
+  background: rgba(239, 68, 68, 0.14);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.dash-badge-neutral {
+  background: rgba(255, 255, 255, 0.05);
+  color: #A1A1AA;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Inputs e Controles do Dashboard */
+.dash-input {
+  width: 100%;
+  background: rgba(11, 11, 15, 0.8);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.dash-input:focus {
+  border-color: var(--light-purple);
+  box-shadow: 0 0 0 3px rgba(109, 0, 255, 0.2);
+}
+
+.dash-input::placeholder {
+  color: var(--text-muted);
+}
+
+.dash-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+/* Botões do Dashboard */
+.dash-btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.dash-btn-icon:hover {
+  background: rgba(109, 0, 255, 0.2);
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #FFFFFF;
+}
+
+/* Animações sutis */
+@keyframes dashPulseNeon {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(109, 0, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.6);
+  }
+}
+
+.dash-pulse-neon {
+  animation: dashPulseNeon 3s ease-in-out infinite;
+}
+
+
+/* ==========================================================================
+   VOZLY DASHBOARD — SUPERFÍCIES DA VISÃO GERAL (v2)
+   Painéis sólidos e escuros inspirados em dashboards SaaS: menos glow,
+   mais hierarquia tipográfica e alinhamento consistente.
+   ========================================================================== */
+
+:root {
+  --vz-surface: #111016;
+  --vz-surface-2: #16141D;
+  --vz-surface-inset: #0B0A10;
+  --vz-border: rgba(255, 255, 255, 0.07);
+  --vz-border-strong: rgba(168, 85, 247, 0.35);
+  --vz-grid-line: rgba(255, 255, 255, 0.06);
+  --vz-accent: #8B5CF6;
+  --vz-accent-soft: rgba(139, 92, 246, 0.16);
+}
+
+@keyframes vzShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.vz-panel {
+  background: var(--vz-surface);
+  border: 1px solid var(--vz-border);
+  border-radius: 18px;
+  padding: 20px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vz-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vz-panel-head > div:first-child { min-width: 0; }
+
+@media (max-width: 520px) {
+  .vz-panel-head { flex-wrap: wrap; }
+}
+
+.vz-panel-title {
+  font-family: var(--font-display);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.vz-panel-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+.vz-seg {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 10px;
+  background: var(--vz-surface-inset);
+  border: 1px solid var(--vz-border);
+}
+
+.vz-seg button {
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.vz-seg button:hover { color: #FFFFFF; }
+
+.vz-seg button.active {
+  background: var(--vz-accent);
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.35);
+}
+
+.vz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--vz-surface-2);
+  border: 1px solid var(--vz-border);
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.vz-btn:hover { color: #FFFFFF; border-color: var(--vz-border-strong); }
+
+.vz-btn-primary {
+  color: #FFFFFF;
+  background: var(--vz-accent);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
+}
+
+.vz-btn-primary:hover { background: #9B6DFA; }
+
+.vz-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #C084FC;
+  white-space: nowrap;
+}
+
+.vz-link:hover { color: #FFFFFF; }
+
+.vz-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.vz-tag::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.vz-tag[data-tone='green'] { color: #4ADE80; background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.22); }
+.vz-tag[data-tone='purple'] { color: #C084FC; background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.25); }
+.vz-tag[data-tone='amber'] { color: #FBBF24; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.22); }
+.vz-tag[data-tone='red'] { color: #F87171; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.22); }
+.vz-tag[data-tone='blue'] { color: #38BDF8; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.22); }
+.vz-tag[data-tone='neutral'] { color: #A1A1AA; background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1); }
