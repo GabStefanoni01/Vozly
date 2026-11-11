@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { DashboardApiService, DashboardRange } from '../../../core/api/dashboard-api.service';
 import { remoteResource } from '../../../core/api/remote-resource';
@@ -6,6 +7,7 @@ import { fmtDuration, fmtNumber } from '../../../components/dashboard/overview/o
 @Component({
   selector: 'app-usage',
   standalone: true,
+  imports: [CommonModule],
   template: `
     <div class="usage-page">
       <header class="page-header">
