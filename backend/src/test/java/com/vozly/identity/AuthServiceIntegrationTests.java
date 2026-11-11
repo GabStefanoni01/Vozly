@@ -79,6 +79,13 @@ class AuthServiceIntegrationTests {
                     revoked_at TIMESTAMP WITH TIME ZONE, replaced_by UUID,
                     user_agent VARCHAR(500), ip_address VARCHAR(64))
                 """);
+        jdbc.execute("""
+                CREATE TABLE vozly.password_reset_tokens (
+                    id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES vozly.users(id),
+                    token_hash CHAR(64) NOT NULL UNIQUE, expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                    used_at TIMESTAMP WITH TIME ZONE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP)
+                """);
     }
 
     @Test
