@@ -27,6 +27,7 @@ CREATE TABLE vozly.agent_versions (
     published_at TIMESTAMPTZ NOT NULL,
     published_by UUID REFERENCES vozly.users(id),
     CONSTRAINT uq_agent_versions_tenant_id UNIQUE (tenant_id, id),
+    CONSTRAINT uq_agent_versions_tenant_agent_id UNIQUE (tenant_id, agent_id, id),
     CONSTRAINT uq_agent_versions_number UNIQUE (tenant_id, agent_id, version_number),
     CONSTRAINT fk_agent_versions_agent FOREIGN KEY (tenant_id, agent_id)
         REFERENCES vozly.agents(tenant_id, id),
@@ -34,8 +35,8 @@ CREATE TABLE vozly.agent_versions (
 );
 ALTER TABLE vozly.agents
     ADD CONSTRAINT fk_agents_published_version
-    FOREIGN KEY (tenant_id, current_published_version_id)
-    REFERENCES vozly.agent_versions(tenant_id, id);
+    FOREIGN KEY (tenant_id, id, current_published_version_id)
+    REFERENCES vozly.agent_versions(tenant_id, agent_id, id);
 
 CREATE TABLE vozly.phone_numbers (
     id UUID PRIMARY KEY,
@@ -77,15 +78,16 @@ CREATE TABLE vozly.calls (
     CONSTRAINT uq_calls_provider_ref UNIQUE (provider_key, provider_call_ref),
     CONSTRAINT fk_calls_agent FOREIGN KEY (tenant_id, agent_id)
         REFERENCES vozly.agents(tenant_id, id),
-    CONSTRAINT fk_calls_agent_version FOREIGN KEY (tenant_id, agent_version_id)
-        REFERENCES vozly.agent_versions(tenant_id, id),
+    CONSTRAINT fk_calls_agent_version FOREIGN KEY (tenant_id, agent_id, agent_version_id)
+        REFERENCES vozly.agent_versions(tenant_id, agent_id, id),
     CONSTRAINT fk_calls_phone_number FOREIGN KEY (tenant_id, phone_number_id)
         REFERENCES vozly.phone_numbers(tenant_id, id),
     CONSTRAINT chk_calls_direction CHECK (direction IN ('INBOUND', 'OUTBOUND')),
     CONSTRAINT chk_calls_status CHECK (status IN ('RECEIVED', 'RESOLVING', 'RINGING', 'ACTIVE', 'TRANSFERRING', 'COMPLETED', 'FAILED', 'REJECTED', 'CANCELLED', 'TIMED_OUT')),
     CONSTRAINT chk_calls_end_reason CHECK (end_reason IS NULL OR end_reason IN ('RESOLVED', 'TRANSFERRED', 'CALLBACK_REQUESTED', 'CALLER_HANGUP', 'FALLBACK', 'FAILED')),
     CONSTRAINT chk_calls_time_order CHECK (ended_at IS NULL OR ended_at >= started_at),
-    CONSTRAINT chk_calls_answer_time CHECK (answered_at IS NULL OR answered_at >= started_at)
+    CONSTRAINT chk_calls_answer_time CHECK (answered_at IS NULL OR answered_at >= started_at),
+    CONSTRAINT chk_calls_end_after_answer CHECK (ended_at IS NULL OR answered_at IS NULL OR ended_at >= answered_at)
 );
 CREATE INDEX idx_calls_tenant_started ON vozly.calls(tenant_id, started_at DESC);
 CREATE INDEX idx_calls_tenant_status_started ON vozly.calls(tenant_id, status, started_at DESC);
