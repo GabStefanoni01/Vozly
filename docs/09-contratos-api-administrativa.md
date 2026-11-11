@@ -1,6 +1,6 @@
 # Contratos da API administrativa
 
-> Especificação inicial para alinhar Angular e backend Spring Boot. Os exemplos são contratos propostos, não endpoints já implementados. A descrição OpenAPI deverá ser gerada/mantida junto da implementação e validada em CI.
+ > Contrato administrativo da Vozly. Os endpoints identificados como implementados refletem o backend atual; os demais recursos continuam como propostas. A descrição OpenAPI deverá ser mantida junto da implementação e validada em CI.
 
 ## 1. Escopo e separação
 
@@ -66,13 +66,24 @@ Códigos HTTP:
 
 ## 3. Autenticação, tenant e autorização
 
-O mecanismo de autenticação (sessão segura ou OAuth2/OIDC/JWT) permanece decisão pendente. Independentemente da escolha:
-- Identidade é validada no backend.
-- Tenant ativo é validado contra membership vigente.
-- Toda operação verifica papel e permissão no servidor.
-- Não aceitar papel, user_id ou tenant_id do cliente como prova de autorização.
-- Tokens devem ter audiência, expiração e escopos apropriados; refresh tokens, se usados, precisam de rotação/revogação.
-- Cookies de sessão exigem HttpOnly, Secure e política SameSite adequada; tokens não devem ser persistidos em localStorage sem análise de risco.
+A autenticação atual utiliza access JWT e refresh token rotativo em cookie HttpOnly. O backend valida a identidade e deriva o tenant e o papel a partir dos dados assinados no token, emitido após validar uma membership ativa.
+
+Endpoints implementados:
+- `GET /api/v1/auth/csrf`: fornece token CSRF para operações protegidas por cookie.
+- `POST /api/v1/auth/register`: recebe `name`, `email`, `password` e `workspaceName`; cria usuário, workspace e membership `OWNER`, e inicia sessão. Retorna access token e define cookie de refresh.
+- `POST /api/v1/auth/login`: autentica e inicia sessão.
+- `POST /api/v1/auth/refresh`: rotaciona refresh token e emite novo access token.
+- `POST /api/v1/auth/logout`: revoga o refresh token e limpa o cookie.
+- `GET /api/v1/auth/me`: retorna `userId`, `tenantId`, `role`, `name` e `email` para a identidade autenticada.
+- `GET /api/v1/tenants/current`: retorna o workspace associado ao tenant do JWT.
+
+Regras do produto:
+- Cada usuário pertence a exatamente um workspace. A migration V6 impõe unicidade por `memberships.user_id`.
+- Um workspace pode ter vários usuários, cada um com sua própria membership e papel.
+- O cadastro local exige senha entre 12 e 128 caracteres e normaliza o e-mail.
+- O refresh token é armazenado no banco somente como hash; o cookie é HttpOnly, SameSite Strict e Secure conforme configuração.
+- Nunca aceitar papel, user_id ou tenant_id do cliente como prova de autorização.
+- Recuperação de senha ainda não está implementada.
 
 ### Matriz inicial de permissões
 
@@ -97,8 +108,8 @@ A matriz é uma política inicial para revisão. Permissões finas podem ser int
 
 | Recurso | Operações principais | Observações |
 |---|---|---|
-| Sessão/identidade | `GET /me`, login/logout conforme auth escolhida | Sem expor credenciais. |
-| Tenants | `POST /tenants`, `GET /tenants/current`, `PATCH /tenants/current` | Criação e seleção verificam membership. |
+| Sessão/identidade | `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me` | Implementado; sem expor credenciais. Recuperação de senha pendente. |
+| Tenants | `GET /api/v1/tenants/current` | Leitura do workspace atual implementada. Cadastro cria um workspace por usuário; gestão/edição do workspace permanece pendente. |
 | Membros | `GET/POST /tenants/current/members`, `PATCH/DELETE /members/{id}` | Convites e alteração de papéis somente admin. |
 | Onboarding | `GET /onboarding`, `PATCH /onboarding` | Progresso informativo; backend valida pré-requisitos reais. |
 | Agentes | `GET/POST /agents`, `GET/PATCH /agents/{id}`, `POST /agents/{id}/archive` | Alterações em draft não mudam versão publicada em uso. |
