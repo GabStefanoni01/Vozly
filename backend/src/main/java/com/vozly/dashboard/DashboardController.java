@@ -170,8 +170,8 @@ public class DashboardController {
         }
         Duration period = Duration.between(start, end);
         Instant previousStart = start.minus(period);
-        CallCounters current = counters(tenantId, java.sql.Timestamp.from(start), java.sql.Timestamp.from(end));
-        CallCounters previous = counters(tenantId, java.sql.Timestamp.from(previousStart), java.sql.Timestamp.from(start));
+        CallCounters current = counters(tenantId, start, end);
+        CallCounters previous = counters(tenantId, previousStart, start);
         long inProgress = jdbc.queryForObject("""
                 SELECT COUNT(*) FROM vozly.calls
                 WHERE tenant_id = ? AND status IN ('ACTIVE', 'TRANSFERRING')
