@@ -12,6 +12,11 @@ spring:
     schemas: vozly
     default-schema: vozly
     locations: classpath:db/migration
+    validate-on-migrate: true
+    validate-migration-naming: true
+    baseline-on-migrate: false
+    out-of-order: false
+    clean-disabled: true
   security:
     oauth2:
       client:

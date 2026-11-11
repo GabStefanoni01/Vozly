@@ -9,6 +9,39 @@ spring:
   sql:
     init:
       mode: never
+  security:
+    oauth2:
+      client:
+        registration:
+          microsoft:
+            client-id: vozly-test-client
+            client-secret: vozly-test-client-secret
+        provider:
+          microsoft:
+            authorization-uri: https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize
+            token-uri: https://login.microsoftonline.com/organizations/oauth2/v2.0/token
+            jwk-set-uri: https://login.microsoftonline.com/common/discovery/v2.0/keys
+            user-info-uri: https://graph.microsoft.com/oidc/userinfo
+
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: false
+        same-site: lax
+
+vozly:
+  security:
+    jwt:
+      secret: test-only-vozly-jwt-secret-with-more-than-32-bytes
+      issuer: https://vozly.test
+      audience: vozly-api
+    cookies:
+      secure: false
+    cors:
+      allowed-origin: http://localhost:4200
+    frontend-url: http://localhost:4200
 
 management:
   endpoint:
