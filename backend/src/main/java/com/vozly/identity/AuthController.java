@@ -23,12 +23,14 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private static final String REFRESH_COOKIE = "vozly_refresh";
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
     private final JdbcTemplate jdbc;
     private final boolean secureCookie;
 
-    public AuthController(AuthService authService, JdbcTemplate jdbc,
+    public AuthController(AuthService authService, PasswordResetService passwordResetService, JdbcTemplate jdbc,
                           @Value("${vozly.security.cookies.secure:true}") boolean secureCookie) {
         this.authService = authService;
+        this.passwordResetService = passwordResetService;
         this.jdbc = jdbc;
         this.secureCookie = secureCookie;
     }
@@ -63,6 +65,20 @@ public class AuthController {
         AuthService.AuthResult result = authService.refresh(token, request.getHeader("User-Agent"),
                 request.getRemoteAddr());
         return authenticatedResponse(result);
+    }
+
+    @PostMapping("/password/forgot")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestReset(request.email());
+        return ResponseEntity.accepted()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .body(Map.of("message", "Se o e-mail estiver cadastrado, você receberá um link para redefinir sua senha."));
+    }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.token(), request.newPassword());
+        return ResponseEntity.noContent().header(HttpHeaders.CACHE_CONTROL, "no-store").build();
     }
 
     @PostMapping("/logout")
@@ -112,6 +128,9 @@ public class AuthController {
                                   @NotBlank @Size(max = 160) String workspaceName) {}
     public record LoginRequest(@NotBlank @Email @Size(max = 320) String email,
                                @NotBlank @Size(max = 128) String password) {}
+    public record ForgotPasswordRequest(@NotBlank @Email @Size(max = 320) String email) {}
+    public record ResetPasswordRequest(@NotBlank @Size(max = 256) String token,
+                                       @NotBlank @Size(min = 12, max = 128) String newPassword) {}
     public record TokenResponse(String accessToken, String tokenType, long expiresIn,
                                 java.util.UUID userId, java.util.UUID tenantId, String role) {}
 }

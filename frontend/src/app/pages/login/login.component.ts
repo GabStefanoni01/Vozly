@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiAuthService } from '../../services/api-auth.service';
+import { HttpErrorResponse } from '@angular/common/http';
 import { safeReturnUrl } from '../../core/auth/auth.guard';
 
 @Component({
@@ -93,7 +94,7 @@ import { safeReturnUrl } from '../../core/auth/auth.guard';
                 </button>
               </div>
 
-              <a class="la-link la-esqueci" href="javascript:void(0)" (click)="esqueciSenha()">
+              <a class="la-link la-esqueci" routerLink="/forgot-password">
                 Esqueci minha senha
               </a>
 
@@ -594,9 +595,14 @@ export class LoginComponent {
     try {
       await this.auth.login(this.email.trim(), this.senha);
       await this.router.navigateByUrl(this.returnUrl);
-    } catch {
+    } catch (error: unknown) {
       this.tipoMensagem = 'erro';
-      this.mensagem = 'Não foi possível entrar. Confira seu e-mail e senha e tente novamente.';
+      const code = error instanceof HttpErrorResponse ? error.error?.code : null;
+      this.mensagem = code === 'INVALID_CREDENTIALS' || (error instanceof HttpErrorResponse && error.status === 401)
+        ? 'E-mail ou senha incorretos. Confira seus dados e tente novamente.'
+        : error instanceof HttpErrorResponse && error.status === 0
+          ? 'Não foi possível conectar ao serviço. Verifique sua conexão e tente novamente.'
+          : 'Não foi possível entrar agora. Tente novamente em instantes.';
     } finally {
       this.carregando = false;
     }
@@ -604,11 +610,6 @@ export class LoginComponent {
 
   entrarComMicrosoft(): void {
     window.location.assign(this.auth.microsoftLoginUrl());
-  }
-
-  esqueciSenha(): void {
-    this.tipoMensagem = 'sucesso';
-    this.mensagem = 'Fluxo de recuperação de senha será ativado na fase de autenticação.';
   }
 
   criarConta(): void {

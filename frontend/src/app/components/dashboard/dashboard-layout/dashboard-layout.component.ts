@@ -20,7 +20,7 @@ interface NavGroup {
  * Shell do painel (sidebar + header).
  *
  * Dados do shell vêm do SessionStore:
- * - Usuário: GET /api/v1/auth/me (✅ disponível — userId, tenantId, role)
+ * - Usuário: GET /api/v1/auth/me (✅ disponível — userId, tenantId, role, name, email)
  * - Workspace: GET /api/v1/tenants/current (⏳ pendente — módulo tenants)
  * - Status da API: GET /actuator/health (✅ disponível)
  */
@@ -193,7 +193,7 @@ interface NavGroup {
               }
             </div>
 
-            <!-- Usuário — GET /api/v1/me -->
+            <!-- Usuário — GET /api/v1/auth/me (userId, tenantId, role, name, email) -->
             <div class="header-dropdown-wrap">
               <button type="button" class="header-user-card" (click)="toggleUserMenu()" [attr.aria-expanded]="showUserMenu()">
                 <span class="user-avatar" [class.pending]="!session.me.isReady()">

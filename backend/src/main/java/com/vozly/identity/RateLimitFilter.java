@@ -16,6 +16,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final RateLimitService rateLimitService;
     private final int loginMax, loginWindow, registrationMax, registrationWindow;
     private final int refreshMax, refreshWindow, interestMax, interestWindow;
+    private final int passwordResetMax, passwordResetWindow;
 
     public RateLimitFilter(RateLimitService rateLimitService,
             @Value("${vozly.security.rate-limit.login.max-attempts:10}") int loginMax,
@@ -25,12 +26,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
             @Value("${vozly.security.rate-limit.refresh.max-attempts:30}") int refreshMax,
             @Value("${vozly.security.rate-limit.refresh.window-seconds:900}") int refreshWindow,
             @Value("${vozly.security.rate-limit.interest.max-attempts:5}") int interestMax,
-            @Value("${vozly.security.rate-limit.interest.window-seconds:3600}") int interestWindow) {
+            @Value("${vozly.security.rate-limit.interest.window-seconds:3600}") int interestWindow,
+            @Value("${vozly.security.rate-limit.password-reset.max-attempts:5}") int passwordResetMax,
+            @Value("${vozly.security.rate-limit.password-reset.window-seconds:3600}") int passwordResetWindow) {
         this.rateLimitService = rateLimitService;
         this.loginMax = loginMax; this.loginWindow = loginWindow;
         this.registrationMax = registrationMax; this.registrationWindow = registrationWindow;
         this.refreshMax = refreshMax; this.refreshWindow = refreshWindow;
         this.interestMax = interestMax; this.interestWindow = interestWindow;
+        this.passwordResetMax = passwordResetMax; this.passwordResetWindow = passwordResetWindow;
     }
 
     @Override
@@ -63,6 +67,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             case "/api/v1/auth/login" -> new Limit("login", loginMax, loginWindow);
             case "/api/v1/auth/register" -> new Limit("register", registrationMax, registrationWindow);
             case "/api/v1/auth/refresh" -> new Limit("refresh", refreshMax, refreshWindow);
+            case "/api/v1/auth/password/forgot", "/api/v1/auth/password/reset" ->
+                    new Limit("password-reset", passwordResetMax, passwordResetWindow);
             case "/api/v1/interests" -> new Limit("interest", interestMax, interestWindow);
             default -> null;
         };

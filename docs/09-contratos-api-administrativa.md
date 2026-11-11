@@ -1,6 +1,6 @@
 # Contratos da API administrativa
 
-> Especificação inicial para alinhar Angular e backend Spring Boot. Os exemplos são contratos propostos, não endpoints já implementados. A descrição OpenAPI deverá ser gerada/mantida junto da implementação e validada em CI.
+> Contrato administrativo da Vozly. Os endpoints identificados como implementados refletem o backend atual; os demais recursos continuam como propostas. A descrição OpenAPI deverá ser mantida junto da implementação e validada em CI.
 
 ## 1. Escopo e separação
 
@@ -54,11 +54,11 @@ Adotar Problem Details (RFC 9457) ou envelope equivalente padronizado. Proposta:
 Não incluir stack trace, SQL, segredo, conteúdo sensível ou informação que confirme recurso de outro tenant.
 
 Códigos HTTP:
-- 400: request malformado.
+- 400: request malformado ou falha de validação dos campos (inclui `VALIDATION_ERROR`).
 - 401: ausência/invalidade de autenticação.
 - 403: identidade autenticada sem permissão.
 - 404: recurso inexistente ou fora do escopo visível do tenant.
-- 409: conflito de estado, duplicidade ou versão concorrente.
+- 409: conflito de estado, duplicidade ou versão concorrente (inclui `EMAIL_ALREADY_REGISTERED`, `ACCOUNT_LINK_REQUIRED` e `RESOURCE_CONFLICT`).
 - 422: conteúdo sintaticamente válido, mas inválido nas regras de domínio.
 - 429: limite de requisições excedido.
 - 500: falha inesperada sem detalhes internos.
@@ -66,13 +66,27 @@ Códigos HTTP:
 
 ## 3. Autenticação, tenant e autorização
 
-O mecanismo de autenticação (sessão segura ou OAuth2/OIDC/JWT) permanece decisão pendente. Independentemente da escolha:
-- Identidade é validada no backend.
-- Tenant ativo é validado contra membership vigente.
-- Toda operação verifica papel e permissão no servidor.
-- Não aceitar papel, user_id ou tenant_id do cliente como prova de autorização.
-- Tokens devem ter audiência, expiração e escopos apropriados; refresh tokens, se usados, precisam de rotação/revogação.
-- Cookies de sessão exigem HttpOnly, Secure e política SameSite adequada; tokens não devem ser persistidos em localStorage sem análise de risco.
+A autenticação atual utiliza access JWT e refresh token rotativo em cookie HttpOnly. O backend valida a identidade e deriva o tenant e o papel a partir dos dados assinados no token, emitido após validar uma membership ativa.
+
+Endpoints implementados:
+- `GET /api/v1/auth/csrf`: fornece token CSRF para operações protegidas por cookie.
+- `POST /api/v1/auth/register`: recebe `name`, `email`, `password` e `workspaceName`; cria usuário, workspace e membership `OWNER`, e inicia sessão. Retorna access token e define cookie de refresh.
+- `POST /api/v1/auth/login`: autentica e inicia sessão.
+- `POST /api/v1/auth/refresh`: rotaciona refresh token e emite novo access token.
+- `POST /api/v1/auth/logout`: revoga o refresh token e limpa o cookie.
+- `POST /api/v1/auth/password/forgot`: solicita recuperação; sempre responde `202` com mensagem genérica para não revelar se o e-mail existe.
+- `POST /api/v1/auth/password/reset`: recebe `token` e `newPassword`; consome o token de uso único e atualiza a senha.
+- `GET /api/v1/auth/me`: retorna `userId`, `tenantId`, `role`, `name` e `email` para a identidade autenticada.
+- `GET /api/v1/tenants/current`: retorna o workspace associado ao tenant do JWT.
+
+Regras do produto:
+- Cada usuário pertence a exatamente um workspace. A migration V6 impõe unicidade por `memberships.user_id`.
+- Um workspace pode ter vários usuários, cada um com sua própria membership e papel.
+- O cadastro local exige senha entre 12 e 128 caracteres e normaliza o e-mail.
+- O refresh token é armazenado no banco somente como hash; o cookie é HttpOnly, SameSite Strict e Secure conforme configuração. Access token tem validade de 10 minutos e não é persistido no localStorage.
+- Nunca aceitar papel, user_id ou tenant_id do cliente como prova de autorização.
+- Recuperação: token aleatório de 256 bits, persistido somente como SHA-256, válido por 30 minutos e de uso único. Ao concluir, todos os refresh tokens do usuário são revogados. O access JWT já emitido pode permanecer válido até seu vencimento (10 minutos).
+- Recuperação de senha implementada com e-mail SMTP; configurar `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS`, `PASSWORD_RESET_FROM` e `FRONTEND_URL` no ambiente.
 
 ### Matriz inicial de permissões
 
@@ -97,8 +111,8 @@ A matriz é uma política inicial para revisão. Permissões finas podem ser int
 
 | Recurso | Operações principais | Observações |
 |---|---|---|
-| Sessão/identidade | `GET /me`, login/logout conforme auth escolhida | Sem expor credenciais. |
-| Tenants | `POST /tenants`, `GET /tenants/current`, `PATCH /tenants/current` | Criação e seleção verificam membership. |
+| Sessão/identidade | `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me` | Implementado; inclui recuperação por e-mail, token temporário de uso único e revogação dos refresh tokens. |
+| Tenants | `GET /api/v1/tenants/current` | Leitura do workspace atual implementada. Cadastro cria um workspace por usuário; gestão/edição do workspace permanece pendente. |
 | Membros | `GET/POST /tenants/current/members`, `PATCH/DELETE /members/{id}` | Convites e alteração de papéis somente admin. |
 | Onboarding | `GET /onboarding`, `PATCH /onboarding` | Progresso informativo; backend valida pré-requisitos reais. |
 | Agentes | `GET/POST /agents`, `GET/PATCH /agents/{id}`, `POST /agents/{id}/archive` | Alterações em draft não mudam versão publicada em uso. |

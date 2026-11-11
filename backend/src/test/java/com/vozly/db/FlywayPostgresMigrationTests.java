@@ -35,7 +35,7 @@ class FlywayPostgresMigrationTests {
 
         var migrationResult = flyway.migrate();
 
-        assertThat(migrationResult.migrationsExecuted).isEqualTo(5);
+        assertThat(migrationResult.migrationsExecuted).isEqualTo(7);
         flyway.validate();
 
         Set<String> tables = new HashSet<>();
@@ -56,6 +56,7 @@ class FlywayPostgresMigrationTests {
                 "memberships",
                 "external_identities",
                 "refresh_token_sessions",
+                "password_reset_tokens",
                 "interest_submissions",
                 "rate_limit_buckets",
                 "agents",

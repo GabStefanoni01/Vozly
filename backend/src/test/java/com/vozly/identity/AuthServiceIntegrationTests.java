@@ -8,19 +8,30 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.Mockito.verify;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
 class AuthServiceIntegrationTests {
     @Autowired AuthService authService;
+    @Autowired PasswordResetService passwordResetService;
+    @MockitoBean JavaMailSender mailSender;
+    @Autowired AuthController authController;
     @Autowired JdbcTemplate jdbc;
     @Autowired org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void prepareSchema() {
         jdbc.execute("CREATE SCHEMA IF NOT EXISTS vozly");
+        jdbc.execute("DROP TABLE IF EXISTS vozly.password_reset_tokens");
         jdbc.execute("DROP TABLE IF EXISTS vozly.refresh_token_sessions");
         jdbc.execute("DROP TABLE IF EXISTS vozly.external_identities");
         jdbc.execute("DROP TABLE IF EXISTS vozly.memberships");
@@ -47,7 +58,8 @@ class AuthServiceIntegrationTests {
                     user_id UUID NOT NULL REFERENCES vozly.users(id), role VARCHAR(20) NOT NULL,
                     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    CONSTRAINT uq_memberships_tenant_user UNIQUE (tenant_id, user_id))
+                    CONSTRAINT uq_memberships_tenant_user UNIQUE (tenant_id, user_id),
+                    CONSTRAINT uq_memberships_single_workspace_per_user UNIQUE (user_id))
                 """);
         jdbc.execute("""
                 CREATE TABLE vozly.external_identities (
@@ -66,6 +78,13 @@ class AuthServiceIntegrationTests {
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                     revoked_at TIMESTAMP WITH TIME ZONE, replaced_by UUID,
                     user_agent VARCHAR(500), ip_address VARCHAR(64))
+                """);
+        jdbc.execute("""
+                CREATE TABLE vozly.password_reset_tokens (
+                    id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES vozly.users(id),
+                    token_hash CHAR(64) NOT NULL UNIQUE, expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                    used_at TIMESTAMP WITH TIME ZONE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP)
                 """);
     }
 
@@ -91,6 +110,74 @@ class AuthServiceIntegrationTests {
                 "gabriel@example.com", "a-very-strong-password", "test-agent", "127.0.0.1");
         assertThat(login.accessToken()).isNotBlank();
         assertThat(login.userId()).isEqualTo(registered.userId());
+    }
+
+    @Test
+    void registrationRejectsDuplicateEmailRegardlessOfCaseOrWhitespace() {
+        authService.register("Gabriel", "Gabriel@Example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+
+        assertThatThrownBy(() -> authService.register(
+                "Another Name", "  gabriel@example.com  ", "another-strong-password",
+                "Another Workspace", null, null))
+                .isInstanceOf(AuthService.EmailAlreadyRegisteredException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.users", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.tenants", Integer.class)).isEqualTo(1);
+    }
+
+    @Test
+    void authenticatedIdentityReturnsDatabaseProfileAndJwtTenantContext() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel Stefanoni", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+        Jwt jwt = Jwt.withTokenValue("test-token")
+                .header("alg", "HS256")
+                .subject(registered.userId().toString())
+                .claim("tenant_id", registered.tenantId().toString())
+                .claim("role", registered.role())
+                .build();
+
+        var identity = authController.me(jwt);
+
+        assertThat(identity)
+                .containsEntry("userId", registered.userId().toString())
+                .containsEntry("tenantId", registered.tenantId().toString())
+                .containsEntry("role", "OWNER")
+                .containsEntry("name", "Gabriel Stefanoni")
+                .containsEntry("email", "gabriel@example.com");
+    }
+
+    @Test
+    void authenticatedIdentityRejectsDisabledUser() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+        jdbc.update("UPDATE vozly.users SET status = 'DISABLED' WHERE id = ?", registered.userId());
+        Jwt jwt = Jwt.withTokenValue("test-token")
+                .header("alg", "HS256")
+                .subject(registered.userId().toString())
+                .claim("tenant_id", registered.tenantId().toString())
+                .claim("role", registered.role())
+                .build();
+
+        assertThatThrownBy(() -> authController.me(jwt))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void databasePreventsAUserFromJoiningASecondWorkspace() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+        java.util.UUID secondTenantId = java.util.UUID.randomUUID();
+        jdbc.update("INSERT INTO vozly.tenants (id, name, slug) VALUES (?, ?, ?)",
+                secondTenantId, "Second Workspace", "second-workspace");
+
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO vozly.memberships (id, tenant_id, user_id, role)
+                VALUES (?, ?, ?, 'OWNER')
+                """, java.util.UUID.randomUUID(), secondTenantId, registered.userId()))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
 
     @Test
@@ -148,6 +235,46 @@ class AuthServiceIntegrationTests {
                 "microsoft-subject-456", "person@company.example", "Person", null, null))
                 .isInstanceOf(AuthService.AccountLinkRequiredException.class);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.users", Integer.class)).isEqualTo(1);
+    }
+
+
+    @Test
+    void passwordResetChangesPasswordConsumesTokenAndRevokesRefreshSessions() {
+        AuthService.AuthResult registered = authService.register(
+                "Gabriel", "gabriel@example.com", "a-very-strong-password",
+                "Vozly Workspace", null, null);
+
+        passwordResetService.requestReset(" GABRIEL@example.com ");
+        ArgumentCaptor<SimpleMailMessage> message = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(message.capture());
+        String resetLink = message.getValue().getText().lines()
+                .filter(line -> line.contains("/reset-password?token="))
+                .findFirst().orElseThrow();
+        String token = resetLink.substring(resetLink.indexOf("token=") + 6);
+
+        passwordResetService.resetPassword(token, "a-new-strong-password");
+
+        String storedHash = jdbc.queryForObject(
+                "SELECT password_hash FROM vozly.users WHERE id = ?",
+                String.class, registered.userId());
+        assertThat(passwordEncoder.matches("a-new-strong-password", storedHash)).isTrue();
+        assertThat(passwordEncoder.matches("a-very-strong-password", storedHash)).isFalse();
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM vozly.refresh_token_sessions
+                WHERE user_id = ? AND revoked_at IS NOT NULL
+                """, Integer.class, registered.userId())).isEqualTo(1);
+        assertThatThrownBy(() -> authService.refresh(registered.refreshToken(), null, null))
+                .isInstanceOf(BadCredentialsException.class);
+        assertThatThrownBy(() -> passwordResetService.resetPassword(token, "another-new-password"))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void passwordResetRequestDoesNotRevealUnknownEmail() {
+        passwordResetService.requestReset("unknown@example.com");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vozly.password_reset_tokens", Integer.class))
+                .isZero();
+        org.mockito.Mockito.verifyNoInteractions(mailSender);
     }
 
     @Test

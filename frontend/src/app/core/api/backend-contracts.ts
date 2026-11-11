@@ -56,9 +56,9 @@ export const BACKEND_CONTRACTS = {
     module: 'com.vozly.identity',
     availability: 'available',
     backendSteps: [
-      'Já disponível: AuthController.me() retorna { userId, tenantId, role } a partir do JWT.',
-      'Para exibir nome e e-mail no header, consultar users pelo subject do JWT e incluir { name, email } na resposta.',
-      'Manter o contrato sem credenciais nem dados de outros tenants (docs/09 §3).'
+      'Implementado: GET /api/v1/auth/me retorna userId, tenantId, role, name e email; os dados de perfil são consultados pelo subject autenticado.',
+      'O endpoint não retorna senha, hash, refresh token ou outros dados sensíveis.',
+      'A identidade e o tenant são derivados do JWT validado no backend (docs/09 §3).'
     ],
     docs: ['docs/09-contratos-api-administrativa.md §3–4', 'docs/08-modelo-relacional-e-persistencia.md §3.1']
   },
@@ -71,9 +71,9 @@ export const BACKEND_CONTRACTS = {
     module: 'com.vozly.tenants',
     availability: 'available',
     backendSteps: [
-      'Tabela tenants já existe na migration V2; consultar o tenant do claim validado no JWT.',
+      'Implementado: GET /api/v1/tenants/current consulta o tenant associado ao tenant_id do JWT validado.',
       COMMON_TENANT_STEP,
-      'Implementar TenantController.current() retornando { id, name, slug, status, createdAt }.'
+      'O cadastro cria um workspace e uma membership OWNER para o usuário; a migration V6 garante uma única membership/workspace por usuário.'
     ],
     docs: ['docs/09-contratos-api-administrativa.md §4', 'docs/04-dominio-e-dados.md']
   },

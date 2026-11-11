@@ -14,7 +14,7 @@ class RateLimitFilterTests {
     void returns429WhenEndpointLimitIsExceeded() throws Exception {
         RateLimitService service = mock(RateLimitService.class);
         when(service.allow(anyString(), anyString(), anyInt(), anyInt())).thenReturn(false);
-        RateLimitFilter filter = new RateLimitFilter(service, 10, 900, 5, 3600, 30, 900, 5, 3600);
+        RateLimitFilter filter = new RateLimitFilter(service, 10, 900, 5, 3600, 30, 900, 5, 3600, 5, 3600);
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/auth/login");
         request.setRemoteAddr("127.0.0.1");
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -28,7 +28,7 @@ class RateLimitFilterTests {
     @Test
     void doesNotLimitUnlistedRoutes() throws Exception {
         RateLimitService service = mock(RateLimitService.class);
-        RateLimitFilter filter = new RateLimitFilter(service, 10, 900, 5, 3600, 30, 900, 5, 3600);
+        RateLimitFilter filter = new RateLimitFilter(service, 10, 900, 5, 3600, 30, 900, 5, 3600, 5, 3600);
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/auth/logout");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = mock(FilterChain.class);
