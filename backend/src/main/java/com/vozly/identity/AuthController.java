@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
     private static final String REFRESH_COOKIE = "vozly_refresh";
-    private final AuthService authService;
+    private final AuthService authService;\n    private final PasswordResetService passwordResetService;
     private final JdbcTemplate jdbc;
     private final boolean secureCookie;
 
@@ -65,7 +65,7 @@ public class AuthController {
         return authenticatedResponse(result);
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/password/forgot")\n    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {\n        passwordResetService.requestReset(request.email());\n        return ResponseEntity.accepted()\n                .header(HttpHeaders.CACHE_CONTROL, "no-store")\n                .body(Map.of("message", "Se o e-mail estiver cadastrado, você receberá um link para redefinir sua senha."));\n    }\n\n    @PostMapping("/password/reset")\n    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {\n        passwordResetService.resetPassword(request.token(), request.newPassword());\n        return ResponseEntity.noContent().header(HttpHeaders.CACHE_CONTROL, "no-store").build();\n    }\n\n    @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CookieValue(name = REFRESH_COOKIE, required = false) String token) {
         authService.logout(token);
         return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
