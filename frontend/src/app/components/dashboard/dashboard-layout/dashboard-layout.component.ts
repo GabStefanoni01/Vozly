@@ -1,8 +1,9 @@
 import { Component, HostListener, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IconComponent } from '../../ui/icon/icon.component';
 import { SessionStore } from '../../../core/api/session.store';
 import { TenantStatus } from '../../../core/api/dashboard-api.models';
+import { ApiAuthService } from '../../../services/api-auth.service';
 
 interface NavItem {
   label: string;
@@ -19,7 +20,7 @@ interface NavGroup {
  * Shell do painel (sidebar + header).
  *
  * Dados do shell vêm do SessionStore:
- * - Usuário: GET /api/v1/me (⏳ pendente — módulo identity)
+ * - Usuário: GET /api/v1/auth/me (✅ disponível — userId, tenantId, role)
  * - Workspace: GET /api/v1/tenants/current (⏳ pendente — módulo tenants)
  * - Status da API: GET /actuator/health (✅ disponível)
  */
@@ -204,8 +205,8 @@ interface NavGroup {
                 </span>
                 <span class="user-meta hide-mobile">
                   @if (session.me.data(); as me) {
-                    <span class="user-name">{{ me.name }}</span>
-                    <span class="user-role-badge">{{ me.role }}</span>
+                    <span class="user-name">{{ me.name ?? 'Minha conta' }}</span>
+                    <span class="user-role-badge">{{ session.roleLabel() }}</span>
                   } @else {
                     <span class="user-name">Sessão</span>
                     <span class="user-role-badge pending">não autenticada</span>
@@ -218,11 +219,11 @@ interface NavGroup {
                 <div class="dropdown user-dropdown">
                   <div class="dropdown-header user-dropdown-header">
                     @if (session.me.data(); as me) {
-                      <span class="ud-name">{{ me.name }}</span>
-                      <span class="ud-email">{{ me.email }}</span>
+                      <span class="ud-name">{{ me.name ?? 'Conta autenticada' }}</span>
+                      <span class="ud-email">{{ me.email ?? session.roleLabel() + ' do workspace' }}</span>
                     } @else {
-                      <span class="ud-name">Usuário não carregado</span>
-                      <span class="ud-email">Implementar GET /api/v1/me (módulo identity)</span>
+                      <span class="ud-name">Sessão não carregada</span>
+                      <span class="ud-email">GET /api/v1/auth/me não respondeu</span>
                     }
                   </div>
                   <ul class="user-dropdown-nav">
@@ -240,10 +241,10 @@ interface NavGroup {
                     </li>
                     <li class="divider"></li>
                     <li>
-                      <a routerLink="/" (click)="showUserMenu.set(false)">
+                      <button type="button" (click)="logout()">
                         <app-icon name="log-out" [size]="16"></app-icon>
-                        <span>Sair para o início</span>
-                      </a>
+                        <span>Sair da conta</span>
+                      </button>
                     </li>
                   </ul>
                 </div>
@@ -577,7 +578,9 @@ interface NavGroup {
     .ud-email { font-size: 11.5px; color: var(--text-muted); }
 
     .user-dropdown-nav { list-style: none; padding-top: 8px; display: flex; flex-direction: column; gap: 2px; }
-    .user-dropdown-nav a {
+    .user-dropdown-nav a, .user-dropdown-nav button {
+      width: 100%;
+      text-align: left;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -587,7 +590,7 @@ interface NavGroup {
       color: var(--text-secondary);
       transition: all var(--transition-fast);
     }
-    .user-dropdown-nav a:hover { background: var(--vz-accent-soft); color: #FFFFFF; }
+    .user-dropdown-nav a:hover, .user-dropdown-nav button:hover { background: var(--vz-accent-soft); color: #FFFFFF; }
     .user-dropdown-nav .divider { height: 1px; background: var(--vz-border); margin: 4px 0; }
 
     .header-cta { padding: 9px 14px; font-size: 13px; }
@@ -631,6 +634,8 @@ interface NavGroup {
 })
 export class DashboardLayoutComponent {
   readonly session = inject(SessionStore);
+  private readonly auth = inject(ApiAuthService);
+  private readonly router = inject(Router);
 
   readonly isCollapsed = signal(false);
   readonly mobileNavOpen = signal(false);
@@ -688,6 +693,17 @@ export class DashboardLayoutComponent {
       offline: 'Inicie o backend em localhost:8080',
       checking: 'Consultando /actuator/health'
     }[this.apiState()];
+  }
+
+  /** POST /api/v1/auth/logout revoga o refresh token e limpa o cookie. */
+  async logout(): Promise<void> {
+    this.showUserMenu.set(false);
+    try {
+      await this.auth.logout();
+    } catch {
+      this.auth.clearLocalSession();
+    }
+    await this.router.navigate(['/login']);
   }
 
   toggleCollapse(): void {

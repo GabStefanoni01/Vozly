@@ -46,12 +46,13 @@ export class DashboardApiService {
   }
 
   /**
-   * Usuário autenticado — `GET /api/v1/me`.
-   * ⏳ PENDENTE (módulo identity): definir autenticação, adicionar Spring Security,
-   * migrations users/memberships e MeController. Ver BACKEND_CONTRACTS.me.
+   * Usuário autenticado — `GET /api/v1/auth/me`.
+   * ✅ IMPLEMENTADO (identity/AuthController). O Bearer token é anexado pelo
+   * authInterceptor. Para exibir nome/e-mail, o backend precisa incluir esses
+   * campos na resposta (ver BACKEND_CONTRACTS.me).
    */
   getMe(): Observable<MeResponse> {
-    return this.http.get<MeResponse>(`${this.config.baseUrl}/me`);
+    return this.http.get<MeResponse>(`${this.config.baseUrl}/auth/me`);
   }
 
   /**

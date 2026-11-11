@@ -2,12 +2,11 @@
 # URL pública: https://devvozly.onrender.com (o prefixo "dev" identifica o ambiente).
 # Branch publicada: deploy/dev-dashboard (auto-deploy a cada push).
 #
-# Ainda não há backend hospedado: chamadas para /api e /actuator caem no rewrite
-# de SPA e o painel mostra os cards "Backend indisponível" com as instruções.
-# Quando a API Spring Boot estiver no Render, adicionar antes do rewrite:
-#   - type: rewrite
-#     source: /api/*
-#     destination: https://<api-dev>.onrender.com/api/*
+# Backend: https://vozly.onrender.com (FRONTEND_URL = URL deste site).
+# Os rewrites abaixo fazem o papel do Nginx (frontend/nginx/default.conf.template):
+# o navegador fala só com este domínio, então a API e os cookies de autenticação
+# ficam same-origin. Ver docs/12-docker-e-deploy-render.md — "Ambiente de
+# desenvolvimento publicado". NÃO integrar este arquivo na develop.
 services:
   - type: web
     runtime: static
@@ -31,6 +30,19 @@ services:
         name: X-Content-Type-Options
         value: nosniff
     routes:
+      # Proxy para o backend (ordem importa: antes do fallback do Angular).
+      - type: rewrite
+        source: /api/*
+        destination: https://vozly.onrender.com/api/*
+      - type: rewrite
+        source: /actuator/*
+        destination: https://vozly.onrender.com/actuator/*
+      - type: rewrite
+        source: /oauth2/*
+        destination: https://vozly.onrender.com/oauth2/*
+      - type: rewrite
+        source: /login/oauth2/*
+        destination: https://vozly.onrender.com/login/oauth2/*
       # Angular usa rotas no cliente (/dashboard, /login…): sempre servir o index.html.
       - type: rewrite
         source: /*

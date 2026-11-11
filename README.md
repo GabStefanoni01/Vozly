@@ -29,6 +29,7 @@ O MVP será desenhado sem depender de um segmento empresarial específico ou de 
 - [Modelo relacional e persistência](docs/08-modelo-relacional-e-persistencia.md)
 - [Contratos da API administrativa](docs/09-contratos-api-administrativa.md)
 - [Runtime de voz, segurança e operação](docs/10-runtime-de-voz-seguranca-e-operacao.md)
+- [Docker e deploy no Render](docs/12-docker-e-deploy-render.md)
 - [ADR 001 — Monólito modular](docs/decisions/ADR-001-monolito-modular.md)
 - [ADR 002 — Configuração guiada self-service](docs/decisions/ADR-002-configuracao-guiada.md)
 
@@ -58,3 +59,8 @@ A documentação do produto está consolidada e a fundação inicial do backend 
 ## Backend
 
 A aplicação inicial utiliza Java 21, Spring Boot 4.1.2, Maven, PostgreSQL e Flyway. Consulte o [guia do backend](backend/README.md) para configurar o ambiente, executar a aplicação e rodar os testes.
+
+
+## Docker e publicação
+
+A configuração Docker para frontend e backend, execução local com Compose e Blueprint de publicação no Render está documentada em [Docker e deploy no Render](docs/12-docker-e-deploy-render.md).

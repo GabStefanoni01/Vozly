@@ -1,25 +1,20 @@
 import { Routes } from '@angular/router';
+import { LandingPageComponent } from './pages/landing-page/landing-page.component';
+import { LoginComponent } from './pages/login/login.component';
+import { RegisterComponent } from './pages/register/register.component';
+import { SsoCallbackComponent } from './pages/auth/sso-callback.component';
+import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
-  // Landing Page Institucional
-  {
-    path: '',
-    loadComponent: () =>
-      import('./pages/landing-page/landing-page.component').then(m => m.LandingPageComponent),
-    title: 'Vozly — Agentes Inteligentes de Voz para Atendimento Telefônico'
-  },
+  { path: '', component: LandingPageComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'auth/sso/callback', component: SsoCallbackComponent },
 
-  // Acesso / Login
-  {
-    path: 'login',
-    loadComponent: () =>
-      import('./pages/login/login.component').then(m => m.LoginComponent),
-    title: 'Acessar Plataforma — Vozly AI'
-  },
-
-  // Dashboard Operacional da Plataforma (Fase 02)
+  // Painel autenticado — exige sessão válida (authGuard); páginas carregadas sob demanda.
   {
     path: 'dashboard',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./components/dashboard/dashboard-layout/dashboard-layout.component').then(
         m => m.DashboardLayoutComponent
@@ -108,6 +103,5 @@ export const routes: Routes = [
     ]
   },
 
-  // Fallback
   { path: '**', redirectTo: '' }
 ];

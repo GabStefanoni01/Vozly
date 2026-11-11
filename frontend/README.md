@@ -92,4 +92,17 @@ Após selecionar a versão do Node indicada em `.nvmrc`, execute `npm install` p
 
 ---
 
-> ℹ️ **Nota de Engenharia:** Este frontend é estritamente de apresentação e demonstração interativa. Não há dependências diretas de backend ou chamadas de API ativas nesta etapa.
+> ℹ️ **Nota de Engenharia:** A landing page mantém a apresentação do produto e o modal de interesse; as telas de autenticação e o formulário de interesse agora consomem a API configurada no ambiente.
+
+
+## Integração local com a API
+
+O frontend utiliza `src/environments/environment.ts` para definir a URL da API. Por padrão, o desenvolvimento local aponta para `http://localhost:8080`.
+
+1. Inicie o backend Spring Boot na porta `8080`.
+2. Inicie o Angular com `npm start` (porta `4200`).
+3. Para outro endereço de API, ajuste `apiUrl` no arquivo de ambiente antes de compilar.
+4. O login e o cadastro usam os endpoints de autenticação existentes. O access token fica somente em memória; o refresh token permanece em cookie HttpOnly.
+5. O login Microsoft depende de credenciais OIDC configuradas no backend e de uma URL de redirecionamento registrada no Microsoft Entra ID.
+
+O fluxo de recuperação de senha continua indisponível porque ainda não existe endpoint correspondente no backend.

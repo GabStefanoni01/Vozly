@@ -52,14 +52,13 @@ export const BACKEND_CONTRACTS = {
     key: 'me',
     feature: 'Usuário autenticado',
     method: 'GET',
-    path: '/api/v1/me',
+    path: '/api/v1/auth/me',
     module: 'com.vozly.identity',
-    availability: 'pending',
+    availability: 'available',
     backendSteps: [
-      'Decidir o mecanismo de autenticação (sessão HttpOnly ou OAuth2/OIDC) — decisão pendente em docs/09 §3.',
-      'Adicionar spring-boot-starter-security e configurar a SecurityFilterChain.',
-      'Criar migrations Flyway para users e memberships (docs/08 §3.1).',
-      'Implementar MeController retornando { id, name, email, role, activeTenantId } sem expor credenciais.'
+      'Já disponível: AuthController.me() retorna { userId, tenantId, role } a partir do JWT.',
+      'Para exibir nome e e-mail no header, consultar users pelo subject do JWT e incluir { name, email } na resposta.',
+      'Manter o contrato sem credenciais nem dados de outros tenants (docs/09 §3).'
     ],
     docs: ['docs/09-contratos-api-administrativa.md §3–4', 'docs/08-modelo-relacional-e-persistencia.md §3.1']
   },

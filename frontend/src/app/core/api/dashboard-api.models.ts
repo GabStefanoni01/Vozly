@@ -39,14 +39,19 @@ export interface ProblemDetails {
 
 export type MembershipRole = 'OWNER' | 'ADMIN' | 'OPERATOR';
 
-/** `GET /api/v1/me` — usuário autenticado e papel no tenant ativo. */
+/**
+ * `GET /api/v1/auth/me` — ✅ implementado (AuthController.me).
+ * Hoje retorna apenas os claims do JWT: `{ userId, tenantId, role }`.
+ * `name`/`email` são opcionais: quando o backend passar a devolvê-los
+ * (consultando `users`), o header do painel já os exibe.
+ */
 export interface MeResponse {
-  id: string;
-  name: string;
-  email: string;
+  userId: string;
+  tenantId: string;
   /** Papel da membership no tenant ativo, resolvido no servidor. */
   role: MembershipRole;
-  activeTenantId: string;
+  name?: string;
+  email?: string;
 }
 
 export type TenantStatus = 'ONBOARDING' | 'ACTIVE' | 'SUSPENDED';
