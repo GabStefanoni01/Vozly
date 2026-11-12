@@ -187,3 +187,251 @@ As metas só devem ser definidas após baseline com tráfego e fornecedores repr
 ## 13. Critério para implementação
 
 Antes do primeiro fluxo de voz real, criar testes de contrato dos adaptadores, simulação de eventos duplicados/fora de ordem, interrupção, timeouts, transferência com falha, isolamento multi-tenant e execução de ferramentas sem credenciais no contexto do LLM. Fazer spike comparativo dos provedores antes de fixar dependências.
+
+## 14. Modelo de interação de voz
+
+A implementação deve separar três responsabilidades que cooperam durante a chamada:
+
+1. **Telefonia:** recebe a chamada, mantém o canal de mídia e devolve o áudio ao interlocutor.
+2. **Processamento de voz:** transforma áudio em representação compreensível pelo modelo e transforma a resposta em áudio.
+3. **Orquestração conversacional:** interpreta intenção, mantém contexto, aplica políticas e solicita ferramentas de negócio.
+
+Essas responsabilidades podem ser fornecidas por um único provedor de voz em tempo real ou por adaptadores independentes. A escolha será feita por spike comparativo; não deve ser presumida como decisão fechada.
+
+### 14.1 Estratégias de processamento
+
+**Opção A — speech-to-speech em tempo real**
+
+Um modelo multimodal recebe áudio e produz áudio, podendo emitir chamadas estruturadas de ferramentas. Reduz o número de etapas explícitas no caminho crítico e pode oferecer melhor fluidez e interrupção. Ainda assim, chamadas de ferramentas e operações de negócio devem passar pelo backend Vozly.
+
+**Opção B — pipeline modular STT + LLM + TTS**
+
+O áudio é transcrito por STT, o texto/contexto é processado pelo LLM e a resposta é sintetizada pelo TTS. Dá controle independente sobre transcrição, modelo e voz, facilita auditoria textual e troca de fornecedores, mas pode aumentar a latência e a complexidade de coordenação.
+
+A arquitetura interna deve expor interfaces de adaptador para permitir comparar ou substituir as estratégias sem alterar regras de negócio. O modelo de voz nunca substitui autorização, validação de domínio ou execução transacional no backend.
+
+### 14.2 Transporte de mídia
+
+A integração com telefonia deve usar o mecanismo de mídia suportado pelo provedor (por exemplo, SIP/RTP, WebSocket de mídia ou streaming equivalente). REST/Webhooks são adequados para sinalização, eventos e comandos de controle, mas não devem transportar áudio como uma sequência de requisições síncronas longas.
+
+O protocolo final depende do provedor selecionado e será validado em um spike que cubra:
+- áudio bidirecional e streaming;
+- codecs, sample rate e conversão necessários;
+- eventos de início/fim de fala;
+- cancelamento de áudio e barge-in;
+- transferência e encerramento;
+- reconexão, perda de pacotes e encerramento inesperado.
+
+## 15. Roteamento telefônico e resolução do tenant
+
+A empresa poderá disponibilizar seu número por redirecionamento/encaminhamento para um número Vozly, contratação de número provisionado pela Vozly ou integração SIP com uma central existente. São alternativas de produto e operação, ainda não uma decisão de fornecedor.
+
+Independentemente do modelo:
+1. O provedor envia evento autenticado com número chamado e identificadores da chamada.
+2. O adaptador normaliza o evento e deduplica notificações repetidas.
+3. O runtime resolve o número de destino por um vínculo previamente verificado com um tenant e uma configuração telefônica ativa.
+4. Resolve agente e versão publicada associados àquele número.
+5. Verifica status, limites, horário e política de fallback.
+6. Só então atende e inicia a sessão.
+
+O número chamado é uma chave de roteamento, não prova suficiente de autorização por si só. Não aceitar tenant_id ou agent_id arbitrários vindos de payload não confiável. Números precisam ter processo de verificação, associação, desassociação e auditoria.
+
+Se o número não estiver associado, o agente estiver pausado ou o tenant não puder receber chamadas, executar a política de fallback do provedor/tenant sem expor detalhes internos.
+
+## 16. Configuração de saudação e comportamento por empresa
+
+A saudação inicial é configuração do agente/workspace publicada pelo cliente, não texto fixo no código.
+
+O painel deverá permitir configurar, dentro dos limites do produto:
+- texto de saudação;
+- nome de exibição da empresa e identificação da assistente;
+- idioma/variante e voz disponíveis;
+- horário e mensagem fora do expediente;
+- objetivos e escopo de atendimento;
+- informações que podem ser solicitadas;
+- regras para identificação e confirmação do cliente;
+- condições e destinos de transferência;
+- mensagens de fallback e encerramento.
+
+A publicação gera snapshot versionado. Uma chamada em andamento continua usando a versão resolvida no início, mesmo que o cliente publique uma alteração durante a ligação. Segredos e credenciais não fazem parte do snapshot; apenas referências a conexões autorizadas.
+
+A saudação deve ser reproduzida uma vez por chamada, salvo retomada explicitamente definida. Se a configuração estiver inválida ou incompleta, o runtime não deve inventar uma saudação; deve bloquear a publicação ou aplicar fallback seguro previamente configurado.
+
+## 17. Orquestração de turnos e experiência de baixa latência
+
+Um turno representa a fala do cliente e a resposta correspondente. O runtime deve trabalhar com eventos incrementais e concorrência controlada, sem esperar o término da ligação ou acumular toda a conversa antes de responder.
+
+Fluxo de um turno:
+1. Capturar frames de áudio e encaminhá-los continuamente ao adaptador de voz.
+2. Detectar atividade de fala e provável fim de turno.
+3. Receber transcrição parcial ou estado incremental para antecipar preparação de contexto, sem executar ações irreversíveis.
+4. Confirmar o turno final conforme a semântica do provedor.
+5. Classificar intenção e decidir entre resposta direta, pergunta de esclarecimento ou ferramenta.
+6. Se necessário, emitir mensagem curta de espera/transição e executar consulta assíncrona.
+7. Receber resultado normalizado do backend.
+8. Gerar resposta textual/áudio em streaming.
+9. Transmitir chunks em ordem e encerrar o turno.
+10. Permanecer apto a detectar interrupção do cliente.
+
+Transcrição parcial pode apoiar preparação de contexto, mas não deve disparar agendamento, cancelamento ou outra ação com efeito externo. Para operações mutáveis, os dados necessários devem estar completos e a confirmação exigida deve ter sido obtida.
+
+### 17.1 Barge-in e respostas interrompidas
+
+Quando o cliente começar a falar durante a resposta:
+- detectar a nova atividade de fala;
+- cancelar geração e reprodução de áudio pendentes;
+- invalidar chunks antigos com identificador de geração/turno;
+- preservar apenas o estado conversacional válido;
+- processar a nova fala sem deixar uma resposta antiga ser reproduzida depois.
+
+A implementação deve impedir duas respostas audíveis simultâneas para a mesma chamada. Se o fornecedor não oferecer cancelamento confiável, documentar e testar a degradação.
+
+### 17.2 Mensagens de espera
+
+Consultas externas podem levar mais tempo que uma resposta simples. O agente pode usar frases de transição configuradas ou geradas sob política, por exemplo, informando que está verificando o cadastro ou a agenda. Essas mensagens:
+- não podem afirmar que uma ação já foi concluída;
+- não devem ser repetidas em excesso;
+- devem ser canceladas se o cliente interromper;
+- não substituem timeout nem tratamento de falha.
+
+## 18. Integrações de ERP/CRM e ferramentas de atendimento
+
+O modelo não integra diretamente com ERP, banco de dados ou API externa. Ele solicita ferramentas do catálogo Vozly; o backend valida o contexto e delega a execução ao conector autorizado do tenant.
+
+### 18.1 Contrato de ferramentas de negócio
+
+O conjunto inicial a avaliar inclui:
+- `customer.find`: localizar cadastro por telefone, documento ou identificador permitido;
+- `customer.get_profile`: consultar dados necessários para confirmar identidade/endereço;
+- `customer.get_history`: consultar histórico de atendimentos;
+- `service_order.get`: consultar ordem de serviço;
+- `schedule.get_availability`: consultar disponibilidade;
+- `schedule.create_appointment`: criar agendamento;
+- `schedule.reschedule_appointment`: reagendar;
+- `schedule.cancel_appointment`: cancelar, sujeito à política de confirmação.
+
+Essas chaves são propostas conceituais, não endpoints ou implementações já existentes. O catálogo oficial, schemas e políticas serão definidos no documento de ferramentas e integrações. Só ferramentas habilitadas e presentes na versão publicada podem ser solicitadas pelo modelo.
+
+### 18.2 Arquitetura de conectores
+
+A Vozly deve manter uma camada de conectores com contratos internos normalizados. Um conector específico traduz o contrato Vozly para a API/protocolo do ERP e converte a resposta externa para um resultado normalizado.
+
+Modelos de integração possíveis, conforme suporte e avaliação:
+- API REST ou SOAP oficial do ERP;
+- webhooks para eventos suportados;
+- conector específico mantido pela Vozly;
+- integração autorizada por banco de dados ou mecanismo de importação/exportação, quando não houver API adequada e a segurança/operação permitirem.
+
+Um conector REST genérico não significa compatibilidade universal. Cada ERP exige validação de autenticação, limites, operações disponíveis, semântica de dados, sandbox e comportamento de falha. Não prometer integração antes de testar o sistema e obter autorização do cliente.
+
+### 18.3 Isolamento e credenciais
+
+Cada conexão pertence a um tenant e possui referência protegida a credenciais. O runtime resolve a conexão a partir do binding publicado e do contexto confiável da chamada. O LLM não escolhe conexão, host, credencial, query SQL ou URL arbitrária.
+
+Toda chamada de ferramenta valida:
+- tenant, agente, versão e binding;
+- schema e limites dos argumentos;
+- permissões e política da operação;
+- timeout, rate limit e idempotência;
+- sanitização de dados retornados.
+
+As respostas externas devem ser reduzidas aos campos necessários para a conversa. Não devolver ao modelo payloads integrais com dados pessoais desnecessários, segredos ou detalhes internos.
+
+## 19. Fluxo de identificação e agendamento
+
+Fluxo de referência para uma solicitação de atendimento técnico:
+
+1. O agente identifica a intenção de agendamento.
+2. Solicita os dados mínimos necessários para localizar o cliente.
+3. Tenta localizar o cadastro usando o número de origem quando disponível e permitido.
+4. Se houver um único cadastro confiável, apresenta dados não excessivos para confirmação (por exemplo, nome e endereço parcialmente mascarado).
+5. Se houver múltiplos resultados, dados insuficientes ou baixa confiança, solicita outro identificador e não escolhe um cadastro por suposição.
+6. Se não encontrar cadastro, segue o fluxo publicado para novo cliente ou encaminhamento humano.
+7. Coleta/valida equipamento, problema relatado, endereço, disponibilidade e demais campos exigidos pela operação.
+8. Consulta disponibilidade na fonte de agenda definida para aquele tenant.
+9. Apresenta opções realmente retornadas pela fonte de agenda.
+10. Repete os dados principais e solicita confirmação explícita do cliente.
+11. Backend valida novamente disponibilidade, regras, tenant e idempotência.
+12. Executa criação do agendamento no sistema que é fonte de verdade.
+13. Só após confirmação positiva do executor, informa que o atendimento foi agendado.
+14. Persiste resumo e referência da operação, respeitando retenção e privacidade.
+
+### 19.1 Fonte oficial da agenda
+
+A configuração do tenant deve declarar qual sistema é a fonte de verdade:
+- **ERP externo:** consultar e criar/reagendar/cancelar no ERP. A Vozly não confirma com base apenas em cache local.
+- **Agenda Vozly:** a Vozly mantém disponibilidade e agendamentos como sistema oficial.
+- **Modelo sincronizado:** só pode ser habilitado quando houver contrato claro de autoridade, reconciliação, prevenção de conflito e tratamento de indisponibilidade. Não permitir duas fontes independentes de verdade para o mesmo recurso/horário.
+
+Para evitar duplicidade, operações de escrita devem usar chave de idempotência quando suportada. Em timeout ambíguo, consultar o estado no sistema oficial antes de repetir a criação.
+
+## 20. Metas iniciais de latência e estratégia de medição
+
+Não existe SLO aprovado. Para orientar os primeiros spikes, usar hipóteses de experiência a validar, não garantias comerciais:
+
+| Cenário | Hipótese inicial para teste |
+|---|---|
+| Resposta simples, sem ferramenta | início da resposta falada em aproximadamente 1–1,5 s após fim do turno |
+| Consulta externa simples | resposta inicial em aproximadamente 1–3 s, dependendo do ERP |
+| Operação demorada | mensagem de transição rápida; conclusão após resultado confirmado |
+
+Medir separadamente:
+- fim de fala detectado até decisão de turno;
+- tempo de inferência/primeiro token ou primeiro áudio do modelo;
+- tempo de execução de ferramenta;
+- tempo até primeiro byte/chunk de áudio;
+- latência total percebida pelo cliente;
+- percentis p50, p95 e p99, por provedor, modelo, região e tipo de turno.
+
+As metas devem ser revisadas com testes em português brasileiro, ruído, diferentes redes, chamadas simultâneas e ERPs reais. Não otimizar somente média; observar p95/p99 e taxa de falhas. O runtime deve propagar deadlines e cancelar trabalho que deixou de ser útil quando a chamada termina.
+
+## 21. Sequência recomendada de implementação
+
+A ordem de desenvolvimento recomendada é:
+
+1. **Onboarding e configuração do agente:** saudação, horário, comportamento, dados da empresa, fallback e publicação/versionamento.
+2. **Motor conversacional por texto:** sessão, histórico, contexto, classificação de intenção, orquestração e ferramentas simuladas; validar regras sem custo/complexidade telefônica.
+3. **Catálogo e execução de ferramentas:** contratos, validação, autorização, auditoria, idempotência e primeiro conector de teste.
+4. **Spike de telefonia e voz:** comparar redirecionamento/número/SIP e speech-to-speech versus STT+LLM+TTS; medir qualidade, interrupção, latência e custo.
+5. **Runtime de chamada:** receber ligação, resolver tenant/agente, saudação, streaming bidirecional, turnos, barge-in e fallback.
+6. **Primeiro fluxo vertical de negócio:** localizar cliente, consultar agenda e criar um agendamento em sandbox ou ambiente de teste, com confirmação real.
+7. **Operação e monitoramento:** histórico, métricas por etapa, custos, alertas, limites, transferência humana e política de retenção.
+
+A arquitetura inicial permanece como monólito modular Spring Boot, com adaptadores isolados. Não criar microsserviços apenas por antecipação; extrair componentes somente quando escala, isolamento operacional ou requisitos de latência justificarem.
+
+## 22. Exemplo ponta a ponta
+
+**Cenário:** cliente liga para o número publicado pela assistência e pede uma visita técnica.
+
+1. O provedor entrega evento de chamada e canal de mídia ao Telephony Adapter.
+2. Runtime valida o evento, resolve o número para o tenant e carrega snapshot publicado do agente.
+3. Call Session Manager cria `call_id`, `correlation_id` e estado temporário.
+4. Agente reproduz a saudação configurada pela empresa.
+5. Cliente fala; áudio é processado continuamente pelo adaptador de voz.
+6. Orquestrador identifica intenção de agendamento e solicita os dados faltantes.
+7. Runtime chama `customer.find` por meio do Tool Execution Service.
+8. Backend valida tenant e binding, executa o conector e devolve resultado sanitizado.
+9. Agente confirma os dados com o cliente e coleta informações do equipamento.
+10. Runtime solicita `schedule.get_availability`; backend consulta a fonte oficial da agenda.
+11. Agente oferece somente horários retornados e pede confirmação.
+12. Runtime solicita `schedule.create_appointment`; backend valida novamente e executa com idempotência.
+13. Só com resultado confirmado o agente comunica o agendamento.
+14. Ao encerrar, runtime fecha streams, registra resultado e métricas e aplica as políticas de retenção.
+
+Em qualquer etapa, falha ou ambiguidade deve gerar resposta honesta e fallback configurado, nunca confirmação inventada.
+
+## 23. Critérios de aceite adicionais
+
+Além dos critérios já definidos, validar:
+- número telefônico resolve exclusivamente para tenant/agente previamente associados;
+- chamada usa snapshot publicado e não alterações em rascunho;
+- saudação configurada é reproduzida uma vez;
+- áudio flui em ambos os sentidos sem acumular buffer indefinidamente;
+- interrupção cancela áudio antigo e não permite fala concorrente;
+- transcrição parcial nunca dispara ação irreversível;
+- ferramentas só executam com binding, tenant e versão válidos;
+- cliente não localizado ou ambíguo não é associado por suposição;
+- horários oferecidos vêm da fonte oficial da agenda;
+- criação de agendamento não é repetida cegamente em timeout ambíguo;
+- resposta falada confirma sucesso somente após resultado positivo do executor;
+- métricas permitem identificar qual etapa causou latência ou falha.
